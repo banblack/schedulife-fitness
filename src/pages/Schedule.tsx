@@ -1,27 +1,68 @@
 
 import { Card } from "@/components/ui/card";
 import { Calendar } from "@/components/ui/calendar";
-import { Search, CalendarIcon, CalendarRange } from "lucide-react";
+import { Search, CalendarIcon, CalendarRange, Dumbbell } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { format } from "date-fns";
+import { Badge } from "@/components/ui/badge";
+
+// Preset workouts database
+const presetWorkouts = {
+  chest: [
+    { name: "Bench Press", sets: 4, reps: "8-12", equipment: "Barbell" },
+    { name: "Incline Dumbbell Press", sets: 3, reps: "10-12", equipment: "Dumbbells" },
+    { name: "Push-Ups", sets: 3, reps: "15-20", equipment: "Bodyweight" },
+  ],
+  back: [
+    { name: "Pull-Ups", sets: 4, reps: "8-12", equipment: "Bodyweight" },
+    { name: "Barbell Rows", sets: 3, reps: "10-12", equipment: "Barbell" },
+    { name: "Lat Pulldowns", sets: 3, reps: "12-15", equipment: "Cable Machine" },
+  ],
+  legs: [
+    { name: "Squats", sets: 4, reps: "8-12", equipment: "Barbell" },
+    { name: "Romanian Deadlifts", sets: 3, reps: "10-12", equipment: "Barbell" },
+    { name: "Leg Press", sets: 3, reps: "12-15", equipment: "Machine" },
+  ],
+  shoulders: [
+    { name: "Military Press", sets: 4, reps: "8-12", equipment: "Barbell" },
+    { name: "Lateral Raises", sets: 3, reps: "12-15", equipment: "Dumbbells" },
+    { name: "Face Pulls", sets: 3, reps: "15-20", equipment: "Cable" },
+  ],
+  arms: [
+    { name: "Bicep Curls", sets: 3, reps: "10-12", equipment: "Dumbbells" },
+    { name: "Tricep Pushdowns", sets: 3, reps: "12-15", equipment: "Cable" },
+    { name: "Hammer Curls", sets: 3, reps: "10-12", equipment: "Dumbbells" },
+  ],
+  core: [
+    { name: "Planks", sets: 3, reps: "30-60s", equipment: "Bodyweight" },
+    { name: "Crunches", sets: 3, reps: "15-20", equipment: "Bodyweight" },
+    { name: "Russian Twists", sets: 3, reps: "20 each side", equipment: "Weight Plate" },
+  ],
+};
 
 const Schedule = () => {
   const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
   const [date, setDate] = useState<Date | undefined>(new Date());
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedMuscleGroup, setSelectedMuscleGroup] = useState<keyof typeof presetWorkouts | null>(null);
   
   // Sample workout data - in a real app this would come from your backend
   const workouts = {
     "2024-04-15": { type: "Cardio", description: "30min run" },
     "2024-04-10": { type: "Strength", description: "Upper body" },
-    // Add more sample workouts as needed
   };
 
   const selectedDayWorkout = date 
     ? workouts[format(date, 'yyyy-MM-dd')] 
     : null;
+
+  const filteredExercises = selectedMuscleGroup 
+    ? presetWorkouts[selectedMuscleGroup].filter(exercise => 
+        exercise.name.toLowerCase().includes(searchQuery.toLowerCase())
+      )
+    : [];
 
   return (
     <div className="container px-4 py-8 animate-fade-in">
@@ -53,14 +94,14 @@ const Schedule = () => {
           ))}
         </div>
 
-        {/* Right side - Calendar view */}
+        {/* Right side - Calendar and Exercise Library */}
         <div className="space-y-6">
           <div className="flex flex-col gap-4">
             <div className="flex items-center gap-2">
               <Search className="w-6 h-6 text-gray-500" />
               <Input
                 type="text"
-                placeholder="Search workouts..."
+                placeholder="Search exercises..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="flex-1"
@@ -83,6 +124,45 @@ const Schedule = () => {
                   <p className="text-sm text-neutral">
                     {selectedDayWorkout.type} - {selectedDayWorkout.description}
                   </p>
+                </div>
+              )}
+            </Card>
+
+            {/* Exercise Library Section */}
+            <Card className="p-4">
+              <div className="flex items-center gap-2 mb-4">
+                <Dumbbell className="w-6 h-6 text-primary" />
+                <h2 className="text-xl font-semibold">Exercise Library</h2>
+              </div>
+              
+              <div className="flex flex-wrap gap-2 mb-4">
+                {Object.keys(presetWorkouts).map((muscleGroup) => (
+                  <Badge
+                    key={muscleGroup}
+                    variant={selectedMuscleGroup === muscleGroup ? "default" : "outline"}
+                    className="cursor-pointer"
+                    onClick={() => setSelectedMuscleGroup(muscleGroup as keyof typeof presetWorkouts)}
+                  >
+                    {muscleGroup.charAt(0).toUpperCase() + muscleGroup.slice(1)}
+                  </Badge>
+                ))}
+              </div>
+
+              {selectedMuscleGroup && (
+                <div className="space-y-3">
+                  {filteredExercises.map((exercise, index) => (
+                    <Card key={index} className="p-3">
+                      <div className="flex justify-between items-center">
+                        <div>
+                          <h3 className="font-medium">{exercise.name}</h3>
+                          <p className="text-sm text-neutral">
+                            {exercise.sets} sets × {exercise.reps}
+                          </p>
+                        </div>
+                        <Badge variant="secondary">{exercise.equipment}</Badge>
+                      </div>
+                    </Card>
+                  ))}
                 </div>
               )}
             </Card>
