@@ -1,6 +1,6 @@
 
 import { Card } from "@/components/ui/card";
-import { Activity, Weight, RunningPerson } from "lucide-react";
+import { Activity, Weight } from "lucide-react";
 
 const Dashboard = () => {
   return (
@@ -35,7 +35,7 @@ const Dashboard = () => {
         <Card className="p-6 hover:shadow-lg transition-shadow">
           <div className="flex items-center gap-4">
             <div className="p-3 bg-accent/10 rounded-lg">
-              <RunningPerson className="w-6 h-6 text-accent" />
+              <Activity className="w-6 h-6 text-accent rotate-45" />
             </div>
             <div>
               <p className="text-sm text-neutral">Cardio</p>
