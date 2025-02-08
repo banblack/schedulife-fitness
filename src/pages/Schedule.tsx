@@ -1,12 +1,15 @@
-
 import { Card } from "@/components/ui/card";
 import { Calendar } from "@/components/ui/calendar";
-import { Search, CalendarIcon, CalendarRange, Dumbbell } from "lucide-react";
+import { Search, CalendarIcon, CalendarRange, Dumbbell, Plus, Save, X } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
 
 // Preset workouts database
 const presetWorkouts = {
@@ -42,16 +45,51 @@ const presetWorkouts = {
   ],
 };
 
+interface CustomWorkout {
+  name: string;
+  description: string;
+  exercises: {
+    name: string;
+    sets: number;
+    reps: string;
+    equipment: string;
+  }[];
+}
+
 const Schedule = () => {
   const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
   const [date, setDate] = useState<Date | undefined>(new Date());
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedMuscleGroup, setSelectedMuscleGroup] = useState<keyof typeof presetWorkouts | null>(null);
+  const [customWorkouts, setCustomWorkouts] = useState<CustomWorkout[]>([]);
+  const [newWorkout, setNewWorkout] = useState<CustomWorkout>({
+    name: "",
+    description: "",
+    exercises: []
+  });
+  const [selectedExercises, setSelectedExercises] = useState<string[]>([]);
   
   // Sample workout data - in a real app this would come from your backend
   const workouts = {
     "2024-04-15": { type: "Cardio", description: "30min run" },
     "2024-04-10": { type: "Strength", description: "Upper body" },
+  };
+
+  const handleCreateWorkout = () => {
+    if (!newWorkout.name) return;
+    
+    const selectedWorkoutExercises = Object.values(presetWorkouts)
+      .flat()
+      .filter(exercise => selectedExercises.includes(exercise.name));
+
+    const workoutToAdd = {
+      ...newWorkout,
+      exercises: selectedWorkoutExercises
+    };
+
+    setCustomWorkouts([...customWorkouts, workoutToAdd]);
+    setNewWorkout({ name: "", description: "", exercises: [] });
+    setSelectedExercises([]);
   };
 
   const selectedDayWorkout = date 
@@ -66,9 +104,87 @@ const Schedule = () => {
 
   return (
     <div className="container px-4 py-8 animate-fade-in">
-      <div className="flex items-center gap-3 mb-6">
-        <CalendarIcon className="w-8 h-8 text-primary" />
-        <h1 className="text-3xl font-bold text-gray-900">Weekly Schedule</h1>
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center gap-3">
+          <CalendarIcon className="w-8 h-8 text-primary" />
+          <h1 className="text-3xl font-bold text-gray-900">Weekly Schedule</h1>
+        </div>
+        <Dialog>
+          <DialogTrigger asChild>
+            <Button>
+              <Plus className="w-4 h-4 mr-2" />
+              Create Workout
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="max-w-2xl">
+            <DialogHeader>
+              <DialogTitle>Create Custom Workout</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="workout-name">Workout Name</Label>
+                <Input
+                  id="workout-name"
+                  value={newWorkout.name}
+                  onChange={(e) => setNewWorkout({ ...newWorkout, name: e.target.value })}
+                  placeholder="e.g., Full Body Workout"
+                />
+              </div>
+              <div>
+                <Label htmlFor="workout-description">Description</Label>
+                <Textarea
+                  id="workout-description"
+                  value={newWorkout.description}
+                  onChange={(e) => setNewWorkout({ ...newWorkout, description: e.target.value })}
+                  placeholder="Describe your workout..."
+                />
+              </div>
+              <div>
+                <Label>Select Exercises</Label>
+                <div className="mt-2 space-y-2 max-h-60 overflow-y-auto">
+                  {Object.entries(presetWorkouts).map(([group, exercises]) => (
+                    <div key={group} className="space-y-2">
+                      <h4 className="font-semibold capitalize">{group}</h4>
+                      {exercises.map((exercise) => (
+                        <div key={exercise.name} className="flex items-center space-x-2">
+                          <Checkbox
+                            id={exercise.name}
+                            checked={selectedExercises.includes(exercise.name)}
+                            onCheckedChange={(checked) => {
+                              if (checked) {
+                                setSelectedExercises([...selectedExercises, exercise.name]);
+                              } else {
+                                setSelectedExercises(selectedExercises.filter(name => name !== exercise.name));
+                              }
+                            }}
+                          />
+                          <label
+                            htmlFor={exercise.name}
+                            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                          >
+                            {exercise.name}
+                          </label>
+                        </div>
+                      ))}
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div className="flex justify-end gap-2">
+                <DialogTrigger asChild>
+                  <Button variant="outline">
+                    <X className="w-4 h-4 mr-2" />
+                    Cancel
+                  </Button>
+                </DialogTrigger>
+                <Button onClick={handleCreateWorkout} disabled={!newWorkout.name || selectedExercises.length === 0}>
+                  <Save className="w-4 h-4 mr-2" />
+                  Save Workout
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -169,6 +285,35 @@ const Schedule = () => {
           </div>
         </div>
       </div>
+
+      {customWorkouts.length > 0 && (
+        <div className="space-y-6">
+          <Card className="p-4">
+            <div className="flex items-center gap-2 mb-4">
+              <Dumbbell className="w-6 h-6 text-primary" />
+              <h2 className="text-xl font-semibold">My Workouts</h2>
+            </div>
+            <div className="space-y-3">
+              {customWorkouts.map((workout, index) => (
+                <Card key={index} className="p-4">
+                  <h3 className="font-semibold">{workout.name}</h3>
+                  <p className="text-sm text-muted-foreground mb-2">{workout.description}</p>
+                  <div className="space-y-2">
+                    {workout.exercises.map((exercise, idx) => (
+                      <div key={idx} className="flex justify-between items-center text-sm">
+                        <span>{exercise.name}</span>
+                        <span className="text-muted-foreground">
+                          {exercise.sets} sets × {exercise.reps}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </Card>
+              ))}
+            </div>
+          </Card>
+        </div>
+      )}
     </div>
   );
 };
