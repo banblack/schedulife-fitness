@@ -5,6 +5,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Navbar from "./components/Navbar";
+import Landing from "./pages/Landing";
 import Dashboard from "./pages/Dashboard";
 import Schedule from "./pages/Schedule";
 import News from "./pages/News";
@@ -20,13 +21,23 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <div className="min-h-screen pb-16 sm:pb-0 sm:pt-16 bg-gray-50">
-          <Navbar />
           <Routes>
-            <Route path="/" element={<Dashboard />} />
-            <Route path="/schedule" element={<Schedule />} />
-            <Route path="/news" element={<News />} />
-            <Route path="/profile" element={<Profile />} />
-            <Route path="*" element={<NotFound />} />
+            <Route path="/" element={<Landing />} />
+            <Route
+              path="/*"
+              element={
+                <>
+                  <Navbar />
+                  <Routes>
+                    <Route path="/dashboard" element={<Dashboard />} />
+                    <Route path="/schedule" element={<Schedule />} />
+                    <Route path="/news" element={<News />} />
+                    <Route path="/profile" element={<Profile />} />
+                    <Route path="*" element={<NotFound />} />
+                  </Routes>
+                </>
+              }
+            />
           </Routes>
         </div>
       </BrowserRouter>
