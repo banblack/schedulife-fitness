@@ -1,5 +1,5 @@
 
-import { Activity, Calendar, Newspaper } from "lucide-react";
+import { Activity, Calendar, Newspaper, User } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 
 const Navbar = () => {
@@ -37,6 +37,15 @@ const Navbar = () => {
           >
             <Newspaper className="w-6 h-6" />
             <span className="text-xs sm:text-sm">News</span>
+          </Link>
+          <Link
+            to="/profile"
+            className={`flex flex-col items-center gap-1 transition-colors ${
+              isActive("/profile") ? "text-primary" : "text-neutral hover:text-primary"
+            }`}
+          >
+            <User className="w-6 h-6" />
+            <span className="text-xs sm:text-sm">Profile</span>
           </Link>
         </div>
       </div>
