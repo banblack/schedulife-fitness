@@ -10,6 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
 // Preset workouts database
 const presetWorkouts = {
@@ -45,6 +46,72 @@ const presetWorkouts = {
   ],
 };
 
+// Preset configurations for different experience levels
+const presetConfigurations = {
+  beginner: {
+    name: "Beginner Program",
+    description: "Perfect for those just starting their fitness journey. Focus on form and building basic strength.",
+    weeklySchedule: [
+      { day: "Monday", focus: "Full Body", intensity: "Light" },
+      { day: "Wednesday", focus: "Full Body", intensity: "Light" },
+      { day: "Friday", focus: "Full Body", intensity: "Light" },
+    ],
+    recommendedExercises: {
+      "Full Body": [
+        { name: "Push-Ups", sets: 2, reps: "8-10", equipment: "Bodyweight" },
+        { name: "Squats", sets: 2, reps: "10-12", equipment: "Bodyweight" },
+        { name: "Pull-Ups (assisted)", sets: 2, reps: "5-8", equipment: "Pull-up Bar" },
+      ]
+    }
+  },
+  amateur: {
+    name: "Amateur Program",
+    description: "For those with some experience. Introduces split routines and progressive overload.",
+    weeklySchedule: [
+      { day: "Monday", focus: "Upper Body", intensity: "Moderate" },
+      { day: "Tuesday", focus: "Lower Body", intensity: "Moderate" },
+      { day: "Thursday", focus: "Upper Body", intensity: "Moderate" },
+      { day: "Friday", focus: "Lower Body", intensity: "Moderate" },
+    ],
+    recommendedExercises: {
+      "Upper Body": [
+        { name: "Bench Press", sets: 3, reps: "8-12", equipment: "Barbell" },
+        { name: "Rows", sets: 3, reps: "10-12", equipment: "Barbell" },
+      ],
+      "Lower Body": [
+        { name: "Squats", sets: 3, reps: "8-12", equipment: "Barbell" },
+        { name: "Romanian Deadlifts", sets: 3, reps: "10-12", equipment: "Barbell" },
+      ]
+    }
+  },
+  pro: {
+    name: "Pro Program",
+    description: "Advanced program with high volume and intensity. For experienced lifters.",
+    weeklySchedule: [
+      { day: "Monday", focus: "Push", intensity: "High" },
+      { day: "Tuesday", focus: "Pull", intensity: "High" },
+      { day: "Wednesday", focus: "Legs", intensity: "High" },
+      { day: "Friday", focus: "Push", intensity: "High" },
+      { day: "Saturday", focus: "Pull", intensity: "High" },
+      { day: "Sunday", focus: "Legs", intensity: "High" },
+    ],
+    recommendedExercises: {
+      "Push": [
+        { name: "Bench Press", sets: 4, reps: "6-8", equipment: "Barbell" },
+        { name: "Military Press", sets: 4, reps: "8-10", equipment: "Barbell" },
+      ],
+      "Pull": [
+        { name: "Pull-Ups", sets: 4, reps: "8-12", equipment: "Bodyweight" },
+        { name: "Barbell Rows", sets: 4, reps: "8-10", equipment: "Barbell" },
+      ],
+      "Legs": [
+        { name: "Squats", sets: 4, reps: "6-8", equipment: "Barbell" },
+        { name: "Deadlifts", sets: 4, reps: "6-8", equipment: "Barbell" },
+      ]
+    }
+  }
+};
+
 interface CustomWorkout {
   name: string;
   description: string;
@@ -68,8 +135,8 @@ const Schedule = () => {
     exercises: []
   });
   const [selectedExercises, setSelectedExercises] = useState<string[]>([]);
+  const [selectedPreset, setSelectedPreset] = useState<keyof typeof presetConfigurations | null>(null);
   
-  // Sample workout data - in a real app this would come from your backend
   const workouts = {
     "2024-04-15": { type: "Cardio", description: "30min run" },
     "2024-04-10": { type: "Strength", description: "Upper body" },
@@ -90,6 +157,27 @@ const Schedule = () => {
     setCustomWorkouts([...customWorkouts, workoutToAdd]);
     setNewWorkout({ name: "", description: "", exercises: [] });
     setSelectedExercises([]);
+  };
+
+  const handlePresetSelect = (preset: keyof typeof presetConfigurations) => {
+    setSelectedPreset(preset);
+    const config = presetConfigurations[preset];
+    
+    // Create a new workout based on the preset configuration
+    const presetExercises = Object.values(config.recommendedExercises)
+      .flat()
+      .map(exercise => ({
+        name: exercise.name,
+        sets: exercise.sets,
+        reps: exercise.reps,
+        equipment: exercise.equipment
+      }));
+
+    setNewWorkout({
+      name: config.name,
+      description: config.description,
+      exercises: presetExercises
+    });
   };
 
   const selectedDayWorkout = date 
@@ -121,6 +209,31 @@ const Schedule = () => {
               <DialogTitle>Create Custom Workout</DialogTitle>
             </DialogHeader>
             <div className="space-y-4">
+              <div className="space-y-4">
+                <Label>Choose Experience Level</Label>
+                <RadioGroup
+                  onValueChange={(value) => handlePresetSelect(value as keyof typeof presetConfigurations)}
+                  className="grid grid-cols-3 gap-4"
+                >
+                  {Object.entries(presetConfigurations).map(([key, config]) => (
+                    <div key={key} className="relative">
+                      <RadioGroupItem
+                        value={key}
+                        id={key}
+                        className="peer sr-only"
+                      />
+                      <Label
+                        htmlFor={key}
+                        className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary cursor-pointer"
+                      >
+                        <span className="font-semibold capitalize">{key}</span>
+                        <span className="text-xs text-muted-foreground">{config.description}</span>
+                      </Label>
+                    </div>
+                  ))}
+                </RadioGroup>
+              </div>
+
               <div>
                 <Label htmlFor="workout-name">Workout Name</Label>
                 <Input
@@ -139,8 +252,26 @@ const Schedule = () => {
                   placeholder="Describe your workout..."
                 />
               </div>
+
+              {selectedPreset && (
+                <div className="space-y-4">
+                  <Label>Recommended Schedule</Label>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {presetConfigurations[selectedPreset].weeklySchedule.map((day, index) => (
+                      <Card key={index} className="p-4">
+                        <div className="flex justify-between items-center">
+                          <span className="font-medium">{day.day}</span>
+                          <Badge variant="secondary">{day.intensity}</Badge>
+                        </div>
+                        <p className="text-sm text-muted-foreground mt-1">{day.focus}</p>
+                      </Card>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               <div>
-                <Label>Select Exercises</Label>
+                <Label>Select Additional Exercises</Label>
                 <div className="mt-2 space-y-2 max-h-60 overflow-y-auto">
                   {Object.entries(presetWorkouts).map(([group, exercises]) => (
                     <div key={group} className="space-y-2">
@@ -188,7 +319,6 @@ const Schedule = () => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* Left side - Weekly schedule */}
         <div className="space-y-4">
           <div className="flex items-center gap-2 mb-4">
             <CalendarRange className="w-6 h-6 text-primary" />
@@ -210,7 +340,6 @@ const Schedule = () => {
           ))}
         </div>
 
-        {/* Right side - Calendar and Exercise Library */}
         <div className="space-y-6">
           <div className="flex flex-col gap-4">
             <div className="flex items-center gap-2">
@@ -244,7 +373,6 @@ const Schedule = () => {
               )}
             </Card>
 
-            {/* Exercise Library Section */}
             <Card className="p-4">
               <div className="flex items-center gap-2 mb-4">
                 <Dumbbell className="w-6 h-6 text-primary" />
@@ -287,7 +415,7 @@ const Schedule = () => {
       </div>
 
       {customWorkouts.length > 0 && (
-        <div className="space-y-6">
+        <div className="mt-8 space-y-6">
           <Card className="p-4">
             <div className="flex items-center gap-2 mb-4">
               <Dumbbell className="w-6 h-6 text-primary" />
