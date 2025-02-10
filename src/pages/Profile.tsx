@@ -3,7 +3,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { User, Camera, Save, AlertCircle } from "lucide-react";
+import { User, Camera, Save, AlertCircle, Trophy, Target, Dumbbell } from "lucide-react";
 import { useState } from "react";
 import { useToast } from "@/components/ui/use-toast";
 
@@ -143,16 +143,16 @@ const Profile = () => {
   };
 
   return (
-    <div className="container px-4 py-8 max-w-2xl mx-auto animate-fade-in">
+    <div className="container px-4 py-8 max-w-2xl mx-auto animate-fade-in bg-gradient-to-b from-primary/5 to-transparent rounded-lg">
       <div className="flex items-center gap-3 mb-8">
         <User className="w-8 h-8 text-primary" />
-        <h1 className="text-3xl font-bold text-gray-900">My Profile</h1>
+        <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent">My Profile</h1>
       </div>
 
       <div className="space-y-8">
         {/* Profile Picture Section */}
-        <div className="flex flex-col items-center gap-4">
-          <Avatar className="w-32 h-32">
+        <div className="flex flex-col items-center gap-4 p-6 bg-white/50 rounded-xl shadow-sm backdrop-blur-sm">
+          <Avatar className="w-32 h-32 ring-4 ring-primary/20">
             <AvatarImage src={profile.imageUrl} />
             <AvatarFallback className="bg-primary/10">
               <User className="w-12 h-12 text-primary" />
@@ -169,6 +169,7 @@ const Profile = () => {
             <Button
               variant="outline"
               onClick={() => document.getElementById("avatar-upload")?.click()}
+              className="hover:bg-primary/10 transition-colors"
             >
               <Camera className="w-4 h-4 mr-2" />
               Upload Photo
@@ -177,11 +178,14 @@ const Profile = () => {
         </div>
 
         {/* Personal Information */}
-        <div className="space-y-4">
-          <h2 className="text-xl font-semibold">Personal Information</h2>
+        <div className="space-y-4 p-6 bg-white/50 rounded-xl shadow-sm backdrop-blur-sm">
+          <div className="flex items-center gap-2">
+            <User className="w-5 h-5 text-primary" />
+            <h2 className="text-xl font-semibold">Personal Information</h2>
+          </div>
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
-              <label htmlFor="name" className="text-sm font-medium">
+              <label htmlFor="name" className="text-sm font-medium text-gray-700">
                 Full Name *
               </label>
               <Input
@@ -190,7 +194,7 @@ const Profile = () => {
                 value={profile.name}
                 onChange={handleInputChange}
                 placeholder="Enter your name"
-                className={errors.name ? "border-red-500" : ""}
+                className={`${errors.name ? "border-red-500" : "focus:ring-primary/30"}`}
               />
               {errors.name && (
                 <p className="text-sm text-red-500 flex items-center gap-1">
@@ -200,7 +204,7 @@ const Profile = () => {
               )}
             </div>
             <div className="space-y-2">
-              <label htmlFor="email" className="text-sm font-medium">
+              <label htmlFor="email" className="text-sm font-medium text-gray-700">
                 Email *
               </label>
               <Input
@@ -210,7 +214,7 @@ const Profile = () => {
                 value={profile.email}
                 onChange={handleInputChange}
                 placeholder="Enter your email"
-                className={errors.email ? "border-red-500" : ""}
+                className={`${errors.email ? "border-red-500" : "focus:ring-primary/30"}`}
               />
               {errors.email && (
                 <p className="text-sm text-red-500 flex items-center gap-1">
@@ -223,11 +227,14 @@ const Profile = () => {
         </div>
 
         {/* Physical Information */}
-        <div className="space-y-4">
-          <h2 className="text-xl font-semibold">Physical Information</h2>
+        <div className="space-y-4 p-6 bg-white/50 rounded-xl shadow-sm backdrop-blur-sm">
+          <div className="flex items-center gap-2">
+            <Dumbbell className="w-5 h-5 text-primary" />
+            <h2 className="text-xl font-semibold">Physical Information</h2>
+          </div>
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
-              <label htmlFor="height" className="text-sm font-medium">
+              <label htmlFor="height" className="text-sm font-medium text-gray-700">
                 Height (cm)
               </label>
               <Input
@@ -237,7 +244,7 @@ const Profile = () => {
                 value={profile.height}
                 onChange={handleInputChange}
                 placeholder="Enter your height"
-                className={errors.height ? "border-red-500" : ""}
+                className={`${errors.height ? "border-red-500" : "focus:ring-primary/30"}`}
               />
               {errors.height && (
                 <p className="text-sm text-red-500 flex items-center gap-1">
@@ -247,7 +254,7 @@ const Profile = () => {
               )}
             </div>
             <div className="space-y-2">
-              <label htmlFor="weight" className="text-sm font-medium">
+              <label htmlFor="weight" className="text-sm font-medium text-gray-700">
                 Weight (kg)
               </label>
               <Input
@@ -257,7 +264,7 @@ const Profile = () => {
                 value={profile.weight}
                 onChange={handleInputChange}
                 placeholder="Enter your weight"
-                className={errors.weight ? "border-red-500" : ""}
+                className={`${errors.weight ? "border-red-500" : "focus:ring-primary/30"}`}
               />
               {errors.weight && (
                 <p className="text-sm text-red-500 flex items-center gap-1">
@@ -268,8 +275,9 @@ const Profile = () => {
             </div>
           </div>
           {bmi !== null && (
-            <div className="p-4 bg-primary/5 rounded-lg">
-              <p className="text-sm font-medium">
+            <div className="p-4 bg-primary/5 rounded-lg border border-primary/10">
+              <p className="text-sm font-medium flex items-center gap-2">
+                <Trophy className="w-4 h-4 text-primary" />
                 Your BMI: {bmi} ({getBMICategory(bmi)})
               </p>
             </div>
@@ -277,11 +285,14 @@ const Profile = () => {
         </div>
 
         {/* Bio & Goals */}
-        <div className="space-y-4">
-          <h2 className="text-xl font-semibold">Bio & Goals</h2>
+        <div className="space-y-4 p-6 bg-white/50 rounded-xl shadow-sm backdrop-blur-sm">
+          <div className="flex items-center gap-2">
+            <Target className="w-5 h-5 text-primary" />
+            <h2 className="text-xl font-semibold">Bio & Goals</h2>
+          </div>
           <div className="space-y-4">
             <div className="space-y-2">
-              <label htmlFor="bio" className="text-sm font-medium">
+              <label htmlFor="bio" className="text-sm font-medium text-gray-700">
                 Bio
               </label>
               <Textarea
@@ -290,11 +301,11 @@ const Profile = () => {
                 value={profile.bio}
                 onChange={handleInputChange}
                 placeholder="Tell us about yourself"
-                className="min-h-[100px]"
+                className="min-h-[100px] focus:ring-primary/30"
               />
             </div>
             <div className="space-y-2">
-              <label htmlFor="fitnessGoals" className="text-sm font-medium">
+              <label htmlFor="fitnessGoals" className="text-sm font-medium text-gray-700">
                 Fitness Goals
               </label>
               <Textarea
@@ -303,14 +314,17 @@ const Profile = () => {
                 value={profile.fitnessGoals}
                 onChange={handleInputChange}
                 placeholder="What are your fitness goals?"
-                className="min-h-[100px]"
+                className="min-h-[100px] focus:ring-primary/30"
               />
             </div>
           </div>
         </div>
 
         {/* Save Button */}
-        <Button onClick={handleSave} className="w-full sm:w-auto">
+        <Button 
+          onClick={handleSave} 
+          className="w-full sm:w-auto bg-gradient-to-r from-primary to-accent hover:opacity-90 transition-opacity"
+        >
           <Save className="w-4 h-4 mr-2" />
           Save Profile
         </Button>
@@ -327,4 +341,3 @@ const getBMICategory = (bmi: number): string => {
 };
 
 export default Profile;
-
