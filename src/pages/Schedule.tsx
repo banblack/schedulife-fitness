@@ -12,7 +12,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { toast } from "@/components/ui/toast";
+import { toast } from "@/hooks/use-toast";
 
 // Preset workouts database
 const presetWorkouts = {
