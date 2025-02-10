@@ -12,6 +12,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { toast } from "@/components/ui/toast";
 
 // Preset workouts database
 const presetWorkouts = {
@@ -144,8 +145,24 @@ const Schedule = () => {
   };
 
   const handleCreateWorkout = () => {
-    if (!newWorkout.name) return;
+    if (!newWorkout.name) {
+      toast({
+        title: "Error",
+        description: "Please provide a workout name",
+        variant: "destructive"
+      });
+      return;
+    }
     
+    if (selectedExercises.length === 0) {
+      toast({
+        title: "Error",
+        description: "Please select at least one exercise",
+        variant: "destructive"
+      });
+      return;
+    }
+
     const selectedWorkoutExercises = Object.values(presetWorkouts)
       .flat()
       .filter(exercise => selectedExercises.includes(exercise.name));
@@ -158,6 +175,11 @@ const Schedule = () => {
     setCustomWorkouts([...customWorkouts, workoutToAdd]);
     setNewWorkout({ name: "", description: "", exercises: [] });
     setSelectedExercises([]);
+    
+    toast({
+      title: "Success",
+      description: "Workout created successfully",
+    });
   };
 
   const handlePresetSelect = (preset: keyof typeof presetConfigurations) => {
@@ -312,7 +334,10 @@ const Schedule = () => {
                       Cancel
                     </Button>
                   </DialogTrigger>
-                  <Button onClick={handleCreateWorkout} disabled={!newWorkout.name || selectedExercises.length === 0}>
+                  <Button 
+                    onClick={handleCreateWorkout} 
+                    disabled={!newWorkout.name || selectedExercises.length === 0}
+                  >
                     <Save className="w-4 h-4 mr-2" />
                     Save Workout
                   </Button>
