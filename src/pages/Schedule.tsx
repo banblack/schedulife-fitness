@@ -1,3 +1,4 @@
+
 import { Card } from "@/components/ui/card";
 import { Calendar } from "@/components/ui/calendar";
 import { Search, CalendarIcon, CalendarRange, Dumbbell, Plus, Save, X } from "lucide-react";
@@ -16,101 +17,57 @@ import { toast } from "@/hooks/use-toast";
 
 // Preset workouts database
 const presetWorkouts = {
-  chest: [
+  volleyball: [
+    { name: "Vertical Jump Training", sets: 4, reps: "8-12", equipment: "Box/Platform" },
+    { name: "Shoulder Stability", sets: 3, reps: "12-15", equipment: "Resistance Bands" },
+    { name: "Agility Drills", sets: 3, reps: "30s each", equipment: "Cones" },
+    { name: "Explosive Power", sets: 4, reps: "6-8", equipment: "Medicine Ball" },
+    { name: "Core Stability", sets: 3, reps: "15-20", equipment: "Mat" }
+  ],
+  strength: [
     { name: "Bench Press", sets: 4, reps: "8-12", equipment: "Barbell" },
-    { name: "Incline Dumbbell Press", sets: 3, reps: "10-12", equipment: "Dumbbells" },
-    { name: "Push-Ups", sets: 3, reps: "15-20", equipment: "Bodyweight" },
-  ],
-  back: [
-    { name: "Pull-Ups", sets: 4, reps: "8-12", equipment: "Bodyweight" },
-    { name: "Barbell Rows", sets: 3, reps: "10-12", equipment: "Barbell" },
-    { name: "Lat Pulldowns", sets: 3, reps: "12-15", equipment: "Cable Machine" },
-  ],
-  legs: [
     { name: "Squats", sets: 4, reps: "8-12", equipment: "Barbell" },
-    { name: "Romanian Deadlifts", sets: 3, reps: "10-12", equipment: "Barbell" },
-    { name: "Leg Press", sets: 3, reps: "12-15", equipment: "Machine" },
+    { name: "Deadlifts", sets: 3, reps: "8-10", equipment: "Barbell" }
   ],
-  shoulders: [
-    { name: "Military Press", sets: 4, reps: "8-12", equipment: "Barbell" },
-    { name: "Lateral Raises", sets: 3, reps: "12-15", equipment: "Dumbbells" },
-    { name: "Face Pulls", sets: 3, reps: "15-20", equipment: "Cable" },
-  ],
-  arms: [
-    { name: "Bicep Curls", sets: 3, reps: "10-12", equipment: "Dumbbells" },
-    { name: "Tricep Pushdowns", sets: 3, reps: "12-15", equipment: "Cable" },
-    { name: "Hammer Curls", sets: 3, reps: "10-12", equipment: "Dumbbells" },
-  ],
-  core: [
-    { name: "Planks", sets: 3, reps: "30-60s", equipment: "Bodyweight" },
-    { name: "Crunches", sets: 3, reps: "15-20", equipment: "Bodyweight" },
-    { name: "Russian Twists", sets: 3, reps: "20 each side", equipment: "Weight Plate" },
-  ],
+  cardio: [
+    { name: "HIIT", sets: 1, reps: "20min", equipment: "None" },
+    { name: "Jump Rope", sets: 3, reps: "5min", equipment: "Jump Rope" },
+    { name: "Sprint Intervals", sets: 5, reps: "30s/30s", equipment: "None" }
+  ]
 };
 
 // Preset configurations for different experience levels
 const presetConfigurations = {
   beginner: {
-    name: "Beginner Program",
-    description: "Perfect for those just starting their fitness journey. Focus on form and building basic strength.",
+    name: "Beginner Volleyball Program",
+    description: "Perfect for those just starting volleyball training. Focus on fundamentals and building basic strength.",
     weeklySchedule: [
-      { day: "Monday", focus: "Full Body", intensity: "Light" },
-      { day: "Wednesday", focus: "Full Body", intensity: "Light" },
-      { day: "Friday", focus: "Full Body", intensity: "Light" },
-    ],
-    recommendedExercises: {
-      "Full Body": [
-        { name: "Push-Ups", sets: 2, reps: "8-10", equipment: "Bodyweight" },
-        { name: "Squats", sets: 2, reps: "10-12", equipment: "Bodyweight" },
-        { name: "Pull-Ups (assisted)", sets: 2, reps: "5-8", equipment: "Pull-up Bar" },
-      ]
-    }
+      { day: "Monday", focus: "Basic Skills", intensity: "Light" },
+      { day: "Wednesday", focus: "Strength", intensity: "Light" },
+      { day: "Friday", focus: "Cardio", intensity: "Light" }
+    ]
   },
-  amateur: {
-    name: "Amateur Program",
-    description: "For those with some experience. Introduces split routines and progressive overload.",
+  intermediate: {
+    name: "Intermediate Volleyball Program",
+    description: "For players with some experience. Focuses on skill development and conditioning.",
     weeklySchedule: [
-      { day: "Monday", focus: "Upper Body", intensity: "Moderate" },
-      { day: "Tuesday", focus: "Lower Body", intensity: "Moderate" },
-      { day: "Thursday", focus: "Upper Body", intensity: "Moderate" },
-      { day: "Friday", focus: "Lower Body", intensity: "Moderate" },
-    ],
-    recommendedExercises: {
-      "Upper Body": [
-        { name: "Bench Press", sets: 3, reps: "8-12", equipment: "Barbell" },
-        { name: "Rows", sets: 3, reps: "10-12", equipment: "Barbell" },
-      ],
-      "Lower Body": [
-        { name: "Squats", sets: 3, reps: "8-12", equipment: "Barbell" },
-        { name: "Romanian Deadlifts", sets: 3, reps: "10-12", equipment: "Barbell" },
-      ]
-    }
+      { day: "Monday", focus: "Skills & Drills", intensity: "Moderate" },
+      { day: "Tuesday", focus: "Strength", intensity: "Moderate" },
+      { day: "Thursday", focus: "Power & Agility", intensity: "High" },
+      { day: "Friday", focus: "Match Practice", intensity: "Moderate" }
+    ]
   },
-  pro: {
-    name: "Pro Program",
-    description: "Advanced program with high volume and intensity. For experienced lifters.",
+  advanced: {
+    name: "Advanced Volleyball Program",
+    description: "High-intensity program for competitive players.",
     weeklySchedule: [
-      { day: "Monday", focus: "Push", intensity: "High" },
-      { day: "Tuesday", focus: "Pull", intensity: "High" },
-      { day: "Wednesday", focus: "Legs", intensity: "High" },
-      { day: "Friday", focus: "Push", intensity: "High" },
-      { day: "Saturday", focus: "Pull", intensity: "High" },
-      { day: "Sunday", focus: "Legs", intensity: "High" },
-    ],
-    recommendedExercises: {
-      "Push": [
-        { name: "Bench Press", sets: 4, reps: "6-8", equipment: "Barbell" },
-        { name: "Military Press", sets: 4, reps: "8-10", equipment: "Barbell" },
-      ],
-      "Pull": [
-        { name: "Pull-Ups", sets: 4, reps: "8-12", equipment: "Bodyweight" },
-        { name: "Barbell Rows", sets: 4, reps: "8-10", equipment: "Barbell" },
-      ],
-      "Legs": [
-        { name: "Squats", sets: 4, reps: "6-8", equipment: "Barbell" },
-        { name: "Deadlifts", sets: 4, reps: "6-8", equipment: "Barbell" },
-      ]
-    }
+      { day: "Monday", focus: "Skills & Strategy", intensity: "High" },
+      { day: "Tuesday", focus: "Power", intensity: "High" },
+      { day: "Wednesday", focus: "Recovery & Technique", intensity: "Light" },
+      { day: "Thursday", focus: "Speed & Agility", intensity: "High" },
+      { day: "Friday", focus: "Match Simulation", intensity: "High" },
+      { day: "Saturday", focus: "Conditioning", intensity: "Moderate" }
+    ]
   }
 };
 
@@ -129,7 +86,7 @@ const Schedule = () => {
   const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
   const [date, setDate] = useState<Date | undefined>(new Date());
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedMuscleGroup, setSelectedMuscleGroup] = useState<keyof typeof presetWorkouts | null>(null);
+  const [selectedType, setSelectedType] = useState<keyof typeof presetWorkouts | null>(null);
   const [customWorkouts, setCustomWorkouts] = useState<CustomWorkout[]>([]);
   const [newWorkout, setNewWorkout] = useState<CustomWorkout>({
     name: "",
@@ -140,7 +97,7 @@ const Schedule = () => {
   const [selectedPreset, setSelectedPreset] = useState<keyof typeof presetConfigurations | null>(null);
   
   const workouts = {
-    "2024-04-15": { type: "Cardio", description: "30min run" },
+    "2024-04-15": { type: "Volleyball", description: "Skills training" },
     "2024-04-10": { type: "Strength", description: "Upper body" },
   };
 
@@ -186,20 +143,10 @@ const Schedule = () => {
     setSelectedPreset(preset);
     const config = presetConfigurations[preset];
     
-    // Create a new workout based on the preset configuration
-    const presetExercises = Object.values(config.recommendedExercises)
-      .flat()
-      .map(exercise => ({
-        name: exercise.name,
-        sets: exercise.sets,
-        reps: exercise.reps,
-        equipment: exercise.equipment
-      }));
-
     setNewWorkout({
       name: config.name,
       description: config.description,
-      exercises: presetExercises
+      exercises: []
     });
   };
 
@@ -207,8 +154,8 @@ const Schedule = () => {
     ? workouts[format(date, 'yyyy-MM-dd')] 
     : null;
 
-  const filteredExercises = selectedMuscleGroup 
-    ? presetWorkouts[selectedMuscleGroup].filter(exercise => 
+  const filteredExercises = selectedType 
+    ? presetWorkouts[selectedType].filter(exercise => 
         exercise.name.toLowerCase().includes(searchQuery.toLowerCase())
       )
     : [];
@@ -235,7 +182,7 @@ const Schedule = () => {
               <ScrollArea className="h-full pr-4">
                 <div className="space-y-4">
                   <div className="space-y-4">
-                    <Label>Choose Experience Level</Label>
+                    <Label>Choose Level</Label>
                     <RadioGroup
                       onValueChange={(value) => handlePresetSelect(value as keyof typeof presetConfigurations)}
                       className="grid grid-cols-3 gap-4"
@@ -265,7 +212,7 @@ const Schedule = () => {
                       id="workout-name"
                       value={newWorkout.name}
                       onChange={(e) => setNewWorkout({ ...newWorkout, name: e.target.value })}
-                      placeholder="e.g., Full Body Workout"
+                      placeholder="e.g., Volleyball Skills Training"
                     />
                   </div>
                   <div>
@@ -296,7 +243,7 @@ const Schedule = () => {
                   )}
 
                   <div>
-                    <Label>Select Additional Exercises</Label>
+                    <Label>Select Exercises</Label>
                     <ScrollArea className="h-[200px] w-full rounded-md border p-4">
                       <div className="space-y-4">
                         {Object.entries(presetWorkouts).map(([group, exercises]) => (
@@ -412,19 +359,19 @@ const Schedule = () => {
               </div>
               
               <div className="flex flex-wrap gap-2 mb-4">
-                {Object.keys(presetWorkouts).map((muscleGroup) => (
+                {Object.keys(presetWorkouts).map((type) => (
                   <Badge
-                    key={muscleGroup}
-                    variant={selectedMuscleGroup === muscleGroup ? "default" : "outline"}
+                    key={type}
+                    variant={selectedType === type ? "default" : "outline"}
                     className="cursor-pointer"
-                    onClick={() => setSelectedMuscleGroup(muscleGroup as keyof typeof presetWorkouts)}
+                    onClick={() => setSelectedType(type as keyof typeof presetWorkouts)}
                   >
-                    {muscleGroup.charAt(0).toUpperCase() + muscleGroup.slice(1)}
+                    {type.charAt(0).toUpperCase() + type.slice(1)}
                   </Badge>
                 ))}
               </div>
 
-              {selectedMuscleGroup && (
+              {selectedType && (
                 <div className="space-y-3">
                   {filteredExercises.map((exercise, index) => (
                     <Card key={index} className="p-3">
@@ -447,7 +394,7 @@ const Schedule = () => {
       </div>
 
       {customWorkouts.length > 0 && (
-        <div className="mt-8 space-y-6">
+        <div className="mt-8">
           <Card className="p-4">
             <div className="flex items-center gap-2 mb-4">
               <Dumbbell className="w-6 h-6 text-primary" />
