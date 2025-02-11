@@ -1,19 +1,13 @@
-
 import { Card } from "@/components/ui/card";
 import { Calendar } from "@/components/ui/calendar";
-import { Search, CalendarIcon, CalendarRange, Dumbbell, Plus, Save, X } from "lucide-react";
+import { Search, CalendarIcon } from "lucide-react";
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { format } from "date-fns";
-import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Checkbox } from "@/components/ui/checkbox";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { toast } from "@/hooks/use-toast";
+import { WeeklySchedule } from "@/components/schedule/WeeklySchedule";
+import { ExerciseLibrary } from "@/components/schedule/ExerciseLibrary";
+import { WorkoutCreationDialog } from "@/components/schedule/WorkoutCreationDialog";
+import { CustomWorkoutsList } from "@/components/schedule/CustomWorkoutsList";
 
 // Preset workouts database
 const presetWorkouts = {
@@ -154,12 +148,6 @@ const Schedule = () => {
     ? workouts[format(date, 'yyyy-MM-dd')] 
     : null;
 
-  const filteredExercises = selectedType 
-    ? presetWorkouts[selectedType].filter(exercise => 
-        exercise.name.toLowerCase().includes(searchQuery.toLowerCase())
-      )
-    : [];
-
   return (
     <div className="container px-4 py-8 animate-fade-in">
       <div className="flex items-center justify-between mb-6">
@@ -167,157 +155,21 @@ const Schedule = () => {
           <CalendarIcon className="w-8 h-8 text-primary" />
           <h1 className="text-3xl font-bold text-gray-900">Weekly Schedule</h1>
         </div>
-        <Dialog>
-          <DialogTrigger asChild>
-            <Button>
-              <Plus className="w-4 h-4 mr-2" />
-              Create Workout
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-2xl">
-            <DialogHeader>
-              <DialogTitle>Create Custom Workout</DialogTitle>
-            </DialogHeader>
-            <div className="h-[600px] overflow-hidden">
-              <ScrollArea className="h-full pr-4">
-                <div className="space-y-4">
-                  <div className="space-y-4">
-                    <Label>Choose Level</Label>
-                    <RadioGroup
-                      onValueChange={(value) => handlePresetSelect(value as keyof typeof presetConfigurations)}
-                      className="grid grid-cols-3 gap-4"
-                    >
-                      {Object.entries(presetConfigurations).map(([key, config]) => (
-                        <div key={key} className="relative">
-                          <RadioGroupItem
-                            value={key}
-                            id={key}
-                            className="peer sr-only"
-                          />
-                          <Label
-                            htmlFor={key}
-                            className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary cursor-pointer"
-                          >
-                            <span className="font-semibold capitalize">{key}</span>
-                            <span className="text-xs text-muted-foreground">{config.description}</span>
-                          </Label>
-                        </div>
-                      ))}
-                    </RadioGroup>
-                  </div>
-
-                  <div>
-                    <Label htmlFor="workout-name">Workout Name</Label>
-                    <Input
-                      id="workout-name"
-                      value={newWorkout.name}
-                      onChange={(e) => setNewWorkout({ ...newWorkout, name: e.target.value })}
-                      placeholder="e.g., Volleyball Skills Training"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="workout-description">Description</Label>
-                    <Textarea
-                      id="workout-description"
-                      value={newWorkout.description}
-                      onChange={(e) => setNewWorkout({ ...newWorkout, description: e.target.value })}
-                      placeholder="Describe your workout..."
-                    />
-                  </div>
-
-                  {selectedPreset && (
-                    <div className="space-y-4">
-                      <Label>Recommended Schedule</Label>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {presetConfigurations[selectedPreset].weeklySchedule.map((day, index) => (
-                          <Card key={index} className="p-4">
-                            <div className="flex justify-between items-center">
-                              <span className="font-medium">{day.day}</span>
-                              <Badge variant="secondary">{day.intensity}</Badge>
-                            </div>
-                            <p className="text-sm text-muted-foreground mt-1">{day.focus}</p>
-                          </Card>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  <div>
-                    <Label>Select Exercises</Label>
-                    <ScrollArea className="h-[200px] w-full rounded-md border p-4">
-                      <div className="space-y-4">
-                        {Object.entries(presetWorkouts).map(([group, exercises]) => (
-                          <div key={group} className="space-y-2">
-                            <h4 className="font-semibold capitalize">{group}</h4>
-                            {exercises.map((exercise) => (
-                              <div key={exercise.name} className="flex items-center space-x-2">
-                                <Checkbox
-                                  id={exercise.name}
-                                  checked={selectedExercises.includes(exercise.name)}
-                                  onCheckedChange={(checked) => {
-                                    if (checked) {
-                                      setSelectedExercises([...selectedExercises, exercise.name]);
-                                    } else {
-                                      setSelectedExercises(selectedExercises.filter(name => name !== exercise.name));
-                                    }
-                                  }}
-                                />
-                                <label
-                                  htmlFor={exercise.name}
-                                  className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                                >
-                                  {exercise.name}
-                                </label>
-                              </div>
-                            ))}
-                          </div>
-                        ))}
-                      </div>
-                    </ScrollArea>
-                  </div>
-                  <div className="flex justify-end gap-2">
-                    <DialogTrigger asChild>
-                      <Button variant="outline">
-                        <X className="w-4 h-4 mr-2" />
-                        Cancel
-                      </Button>
-                    </DialogTrigger>
-                    <Button 
-                      onClick={handleCreateWorkout} 
-                      disabled={!newWorkout.name || selectedExercises.length === 0}
-                    >
-                      <Save className="w-4 h-4 mr-2" />
-                      Save Workout
-                    </Button>
-                  </div>
-                </div>
-              </ScrollArea>
-            </div>
-          </DialogContent>
-        </Dialog>
+        <WorkoutCreationDialog
+          presetConfigurations={presetConfigurations}
+          presetWorkouts={presetWorkouts}
+          selectedExercises={selectedExercises}
+          newWorkout={newWorkout}
+          selectedPreset={selectedPreset}
+          onPresetSelect={handlePresetSelect}
+          onWorkoutChange={setNewWorkout}
+          onExercisesChange={setSelectedExercises}
+          onCreateWorkout={handleCreateWorkout}
+        />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <div className="space-y-4">
-          <div className="flex items-center gap-2 mb-4">
-            <CalendarRange className="w-6 h-6 text-primary" />
-            <h2 className="text-xl font-semibold">This Week</h2>
-          </div>
-          {days.map((day) => (
-            <Card key={day} className="p-4 hover:shadow-lg transition-shadow">
-              <div className="flex justify-between items-center">
-                <div className="flex items-center gap-4">
-                  <span className="font-medium w-28">{day}</span>
-                  <div className="h-6 w-px bg-gray-200" />
-                  <span className="text-neutral">Rest Day</span>
-                </div>
-                <button className="text-primary hover:text-primary/80 transition-colors">
-                  Add Workout
-                </button>
-              </div>
-            </Card>
-          ))}
-        </div>
+        <WeeklySchedule days={days} />
 
         <div className="space-y-6">
           <div className="flex flex-col gap-4">
@@ -352,75 +204,17 @@ const Schedule = () => {
               )}
             </Card>
 
-            <Card className="p-4">
-              <div className="flex items-center gap-2 mb-4">
-                <Dumbbell className="w-6 h-6 text-primary" />
-                <h2 className="text-xl font-semibold">Exercise Library</h2>
-              </div>
-              
-              <div className="flex flex-wrap gap-2 mb-4">
-                {Object.keys(presetWorkouts).map((type) => (
-                  <Badge
-                    key={type}
-                    variant={selectedType === type ? "default" : "outline"}
-                    className="cursor-pointer"
-                    onClick={() => setSelectedType(type as keyof typeof presetWorkouts)}
-                  >
-                    {type.charAt(0).toUpperCase() + type.slice(1)}
-                  </Badge>
-                ))}
-              </div>
-
-              {selectedType && (
-                <div className="space-y-3">
-                  {filteredExercises.map((exercise, index) => (
-                    <Card key={index} className="p-3">
-                      <div className="flex justify-between items-center">
-                        <div>
-                          <h3 className="font-medium">{exercise.name}</h3>
-                          <p className="text-sm text-neutral">
-                            {exercise.sets} sets × {exercise.reps}
-                          </p>
-                        </div>
-                        <Badge variant="secondary">{exercise.equipment}</Badge>
-                      </div>
-                    </Card>
-                  ))}
-                </div>
-              )}
-            </Card>
+            <ExerciseLibrary
+              presetWorkouts={presetWorkouts}
+              selectedType={selectedType}
+              onTypeSelect={setSelectedType}
+              searchQuery={searchQuery}
+            />
           </div>
         </div>
       </div>
 
-      {customWorkouts.length > 0 && (
-        <div className="mt-8">
-          <Card className="p-4">
-            <div className="flex items-center gap-2 mb-4">
-              <Dumbbell className="w-6 h-6 text-primary" />
-              <h2 className="text-xl font-semibold">My Workouts</h2>
-            </div>
-            <div className="space-y-3">
-              {customWorkouts.map((workout, index) => (
-                <Card key={index} className="p-4">
-                  <h3 className="font-semibold">{workout.name}</h3>
-                  <p className="text-sm text-muted-foreground mb-2">{workout.description}</p>
-                  <div className="space-y-2">
-                    {workout.exercises.map((exercise, idx) => (
-                      <div key={idx} className="flex justify-between items-center text-sm">
-                        <span>{exercise.name}</span>
-                        <span className="text-muted-foreground">
-                          {exercise.sets} sets × {exercise.reps}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                </Card>
-              ))}
-            </div>
-          </Card>
-        </div>
-      )}
+      <CustomWorkoutsList workouts={customWorkouts} />
     </div>
   );
 };
