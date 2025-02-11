@@ -1,4 +1,3 @@
-
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -6,6 +5,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { User, Camera, Save, AlertCircle, Trophy, Target, Dumbbell } from "lucide-react";
 import { useState } from "react";
 import { useToast } from "@/components/ui/use-toast";
+import CoachingPlans from "@/components/subscription/CoachingPlans";
 
 interface ProfileData {
   name: string;
@@ -143,7 +143,7 @@ const Profile = () => {
   };
 
   return (
-    <div className="container px-4 py-8 max-w-2xl mx-auto animate-fade-in bg-gradient-to-b from-primary/5 to-transparent rounded-lg">
+    <div className="container px-4 py-8 max-w-4xl mx-auto animate-fade-in bg-gradient-to-b from-primary/5 to-transparent rounded-lg">
       <div className="flex items-center gap-3 mb-8">
         <User className="w-8 h-8 text-primary" />
         <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent">My Profile</h1>
@@ -328,6 +328,11 @@ const Profile = () => {
           <Save className="w-4 h-4 mr-2" />
           Save Profile
         </Button>
+
+        {/* Premium Coaching Section */}
+        <section className="mt-12">
+          <CoachingPlans />
+        </section>
       </div>
     </div>
   );
