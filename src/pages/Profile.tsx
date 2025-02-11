@@ -3,9 +3,15 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { User, Camera, Save, AlertCircle, Trophy, Target, Dumbbell } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import CoachingPlans from "@/components/subscription/CoachingPlans";
+import { createClient } from '@supabase/supabase-js';
+
+const supabase = createClient(
+  import.meta.env.VITE_SUPABASE_URL,
+  import.meta.env.VITE_SUPABASE_ANON_KEY
+);
 
 interface ProfileData {
   name: string;
@@ -38,6 +44,59 @@ const Profile = () => {
 
   const [errors, setErrors] = useState<ValidationErrors>({});
   const [bmi, setBmi] = useState<number | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchProfile();
+  }, []);
+
+  const fetchProfile = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        toast({
+          title: "Error",
+          description: "Please log in to view your profile",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from('users')
+        .select('*')
+        .eq('id', user.id)
+        .single();
+
+      if (error) throw error;
+
+      if (data) {
+        setProfile({
+          name: data.full_name || "",
+          email: data.email || "",
+          bio: data.bio || "",
+          height: data.height?.toString() || "",
+          weight: data.weight?.toString() || "",
+          fitnessGoals: data.fitness_goals || "",
+          imageUrl: data.avatar_url || "",
+        });
+
+        if (data.height && data.weight) {
+          setBmi(calculateBMI(Number(data.height), Number(data.weight)));
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching profile:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load profile data",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const validateEmail = (email: string): boolean => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -80,7 +139,7 @@ const Profile = () => {
     return isValid;
   };
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       if (file.size > 5 * 1024 * 1024) {
@@ -92,15 +151,44 @@ const Profile = () => {
         return;
       }
 
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setProfile(prev => ({ ...prev, imageUrl: reader.result as string }));
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) throw new Error('No user found');
+
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${user.id}-${Math.random()}.${fileExt}`;
+        const { error: uploadError } = await supabase.storage
+          .from('avatars')
+          .upload(fileName, file);
+
+        if (uploadError) throw uploadError;
+
+        const { data: { publicUrl } } = supabase.storage
+          .from('avatars')
+          .getPublicUrl(fileName);
+
+        setProfile(prev => ({ ...prev, imageUrl: publicUrl }));
+        
+        // Update user profile with new avatar URL
+        const { error: updateError } = await supabase
+          .from('users')
+          .update({ avatar_url: publicUrl })
+          .eq('id', user.id);
+
+        if (updateError) throw updateError;
+
         toast({
           title: "Success",
           description: "Profile picture updated successfully",
         });
-      };
-      reader.readAsDataURL(file);
+      } catch (error) {
+        console.error('Error uploading image:', error);
+        toast({
+          title: "Error",
+          description: "Failed to upload image",
+          variant: "destructive",
+        });
+      }
     }
   };
 
@@ -110,7 +198,6 @@ const Profile = () => {
     const { name, value } = e.target;
     setProfile(prev => ({ ...prev, [name]: value }));
 
-    // Calculate BMI when height or weight changes
     if ((name === 'height' || name === 'weight') && profile.height && profile.weight) {
       const height = Number(name === 'height' ? value : profile.height);
       const weight = Number(name === 'weight' ? value : profile.weight);
@@ -123,7 +210,7 @@ const Profile = () => {
     }
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!validateForm()) {
       toast({
         title: "Validation Error",
@@ -133,14 +220,45 @@ const Profile = () => {
       return;
     }
 
-    // Save to localStorage for persistence
-    localStorage.setItem('userProfile', JSON.stringify(profile));
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('No user found');
 
-    toast({
-      title: "Profile Updated",
-      description: "Your profile has been successfully updated.",
-    });
+      const { error } = await supabase
+        .from('users')
+        .upsert({
+          id: user.id,
+          full_name: profile.name,
+          email: profile.email,
+          bio: profile.bio,
+          height: profile.height ? Number(profile.height) : null,
+          weight: profile.weight ? Number(profile.weight) : null,
+          fitness_goals: profile.fitnessGoals,
+          avatar_url: profile.imageUrl,
+          updated_at: new Date().toISOString(),
+        });
+
+      if (error) throw error;
+
+      toast({
+        title: "Profile Updated",
+        description: "Your profile has been successfully updated.",
+      });
+    } catch (error) {
+      console.error('Error saving profile:', error);
+      toast({
+        title: "Error",
+        description: "Failed to save profile",
+        variant: "destructive",
+      });
+    }
   };
+
+  if (loading) {
+    return <div className="flex items-center justify-center min-h-screen">
+      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+    </div>;
+  }
 
   return (
     <div className="container px-4 py-8 max-w-4xl mx-auto animate-fade-in bg-gradient-to-b from-primary/5 to-transparent rounded-lg">
@@ -150,7 +268,6 @@ const Profile = () => {
       </div>
 
       <div className="space-y-8">
-        {/* Profile Picture Section */}
         <div className="flex flex-col items-center gap-4 p-6 bg-white/50 rounded-xl shadow-sm backdrop-blur-sm">
           <Avatar className="w-32 h-32 ring-4 ring-primary/20">
             <AvatarImage src={profile.imageUrl} />
@@ -177,7 +294,6 @@ const Profile = () => {
           </div>
         </div>
 
-        {/* Personal Information */}
         <div className="space-y-4 p-6 bg-white/50 rounded-xl shadow-sm backdrop-blur-sm">
           <div className="flex items-center gap-2">
             <User className="w-5 h-5 text-primary" />
@@ -226,7 +342,6 @@ const Profile = () => {
           </div>
         </div>
 
-        {/* Physical Information */}
         <div className="space-y-4 p-6 bg-white/50 rounded-xl shadow-sm backdrop-blur-sm">
           <div className="flex items-center gap-2">
             <Dumbbell className="w-5 h-5 text-primary" />
@@ -284,7 +399,6 @@ const Profile = () => {
           )}
         </div>
 
-        {/* Bio & Goals */}
         <div className="space-y-4 p-6 bg-white/50 rounded-xl shadow-sm backdrop-blur-sm">
           <div className="flex items-center gap-2">
             <Target className="w-5 h-5 text-primary" />
@@ -320,7 +434,6 @@ const Profile = () => {
           </div>
         </div>
 
-        {/* Save Button */}
         <Button 
           onClick={handleSave} 
           className="w-full sm:w-auto bg-gradient-to-r from-primary to-accent hover:opacity-90 transition-opacity"
@@ -329,7 +442,6 @@ const Profile = () => {
           Save Profile
         </Button>
 
-        {/* Premium Coaching Section */}
         <section className="mt-12">
           <CoachingPlans />
         </section>
