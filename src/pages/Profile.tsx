@@ -8,10 +8,10 @@ import { useToast } from "@/components/ui/use-toast";
 import CoachingPlans from "@/components/subscription/CoachingPlans";
 import { createClient } from '@supabase/supabase-js';
 
-const supabase = createClient(
-  import.meta.env.VITE_SUPABASE_URL,
-  import.meta.env.VITE_SUPABASE_ANON_KEY
-);
+const supabaseUrl = 'https://jfwpwpjinixnwbmivdwp.supabase.co';
+const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Impmd3B3cGppbml4bndibWl2ZHdwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MDc2NjI5MzAsImV4cCI6MjAyMzIzODkzMH0.JQND6QxHNmbo75QUoZwPEFpJEHiCgo-5ZSg_vvzYtXY';
+
+const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 interface ProfileData {
   name: string;
