@@ -1,5 +1,6 @@
 
 import CoachingPlans from "@/components/subscription/CoachingPlans";
+import FAQ from "@/components/subscription/FAQ";
 import { Crown } from "lucide-react";
 
 const Subscriptions = () => {
@@ -18,6 +19,7 @@ const Subscriptions = () => {
       </div>
 
       <CoachingPlans />
+      <FAQ />
     </div>
   );
 };
