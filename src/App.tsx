@@ -10,6 +10,7 @@ import Dashboard from "./pages/Dashboard";
 import Schedule from "./pages/Schedule";
 import News from "./pages/News";
 import Profile from "./pages/Profile";
+import Subscriptions from "./pages/Subscriptions";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -33,6 +34,7 @@ const App = () => (
                     <Route path="/schedule" element={<Schedule />} />
                     <Route path="/news" element={<News />} />
                     <Route path="/profile" element={<Profile />} />
+                    <Route path="/subscriptions" element={<Subscriptions />} />
                     <Route path="*" element={<NotFound />} />
                   </Routes>
                 </>
