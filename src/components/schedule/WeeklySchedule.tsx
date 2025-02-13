@@ -1,5 +1,6 @@
 
 import { Card } from "@/components/ui/card";
+import { CalendarRange } from "lucide-react";
 
 interface WeeklyScheduleProps {
   days: string[];
