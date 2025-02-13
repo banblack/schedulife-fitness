@@ -1,3 +1,4 @@
+
 import { Card } from "@/components/ui/card";
 import { Calendar } from "@/components/ui/calendar";
 import { Search, CalendarIcon } from "lucide-react";
@@ -8,6 +9,7 @@ import { WeeklySchedule } from "@/components/schedule/WeeklySchedule";
 import { ExerciseLibrary } from "@/components/schedule/ExerciseLibrary";
 import { WorkoutCreationDialog } from "@/components/schedule/WorkoutCreationDialog";
 import { CustomWorkoutsList } from "@/components/schedule/CustomWorkoutsList";
+import { useToast } from "@/hooks/use-toast";
 
 // Preset workouts database
 const presetWorkouts = {
@@ -89,6 +91,7 @@ const Schedule = () => {
   });
   const [selectedExercises, setSelectedExercises] = useState<string[]>([]);
   const [selectedPreset, setSelectedPreset] = useState<keyof typeof presetConfigurations | null>(null);
+  const { toast } = useToast();
   
   const workouts = {
     "2024-04-15": { type: "Volleyball", description: "Skills training" },
@@ -207,7 +210,7 @@ const Schedule = () => {
             <ExerciseLibrary
               presetWorkouts={presetWorkouts}
               selectedType={selectedType}
-              onTypeSelect={setSelectedType}
+              onTypeSelect={(type: keyof typeof presetWorkouts) => setSelectedType(type)}
               searchQuery={searchQuery}
             />
           </div>
