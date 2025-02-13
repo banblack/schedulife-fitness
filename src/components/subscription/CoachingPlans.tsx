@@ -31,7 +31,8 @@ const CoachingPlans = () => {
         "Access to workout library"
       ],
       popular: false,
-      icon: <Shield className="w-5 h-5" />
+      icon: <Shield className="w-5 h-5" />,
+      trialDays: 7
     },
     {
       name: "Pro Coaching",
@@ -48,7 +49,8 @@ const CoachingPlans = () => {
         "Custom meal plans"
       ],
       popular: true,
-      icon: <Star className="w-5 h-5" />
+      icon: <Star className="w-5 h-5" />,
+      trialDays: 14
     },
     {
       name: "Elite Coaching",
@@ -67,14 +69,15 @@ const CoachingPlans = () => {
         "Sport-specific training"
       ],
       popular: false,
-      icon: <Zap className="w-5 h-5" />
+      icon: <Zap className="w-5 h-5" />,
+      trialDays: 14
     }
   ];
 
-  const handleSubscribe = (planName: string) => {
+  const handleStartTrial = (planName: string, trialDays: number) => {
     toast({
-      title: "Coming Soon!",
-      description: `${planName} subscription will be available shortly.`,
+      title: "Free Trial Started!",
+      description: `Your ${trialDays}-day free trial of ${planName} has begun. Enjoy full access to all features!`,
     });
   };
 
@@ -136,12 +139,17 @@ const CoachingPlans = () => {
               <CardDescription>{plan.description}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <p className="text-3xl font-bold">
-                ${billingInterval === 'monthly' ? plan.monthlyPrice : plan.yearlyPrice}
-                <span className="text-sm font-normal text-muted-foreground">
-                  /{billingInterval === 'monthly' ? 'month' : 'year'}
-                </span>
-              </p>
+              <div className="space-y-2">
+                <p className="text-3xl font-bold">
+                  ${billingInterval === 'monthly' ? plan.monthlyPrice : plan.yearlyPrice}
+                  <span className="text-sm font-normal text-muted-foreground">
+                    /{billingInterval === 'monthly' ? 'month' : 'year'}
+                  </span>
+                </p>
+                <p className="text-sm text-primary">
+                  Try free for {plan.trialDays} days
+                </p>
+              </div>
               <ul className="space-y-2">
                 {plan.features.map((feature, index) => (
                   <li key={index} className="flex items-center gap-2">
@@ -151,13 +159,16 @@ const CoachingPlans = () => {
                 ))}
               </ul>
             </CardContent>
-            <CardFooter>
+            <CardFooter className="flex flex-col gap-3">
               <Button 
                 className="w-full bg-gradient-to-r from-primary to-accent hover:opacity-90"
-                onClick={() => handleSubscribe(plan.name)}
+                onClick={() => handleStartTrial(plan.name, plan.trialDays)}
               >
-                Get Started
+                Start {plan.trialDays}-Day Free Trial
               </Button>
+              <p className="text-xs text-center text-gray-500">
+                No credit card required • Cancel anytime
+              </p>
             </CardFooter>
           </Card>
         ))}
