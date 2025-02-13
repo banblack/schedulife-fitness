@@ -1,7 +1,6 @@
-
 import { Card } from "@/components/ui/card";
 import { Calendar } from "@/components/ui/calendar";
-import { Search, CalendarIcon } from "lucide-react";
+import { Search, CalendarIcon, Trophy, Activity } from "lucide-react";
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { format } from "date-fns";
@@ -78,12 +77,64 @@ interface CustomWorkout {
   }[];
 }
 
+interface WorkoutLog {
+  date: string;
+  type: string;
+  description: string;
+  completed: boolean;
+  performance?: {
+    duration: number;
+    intensity: 'Low' | 'Medium' | 'High';
+    notes: string;
+  };
+}
+
+interface Achievement {
+  id: string;
+  name: string;
+  description: string;
+  unlocked: boolean;
+  progress: number;
+  target: number;
+  icon: string;
+}
+
 const Schedule = () => {
   const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
   const [date, setDate] = useState<Date | undefined>(new Date());
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedType, setSelectedType] = useState<keyof typeof presetWorkouts | null>(null);
   const [customWorkouts, setCustomWorkouts] = useState<CustomWorkout[]>([]);
+  const [workoutLogs, setWorkoutLogs] = useState<WorkoutLog[]>([]);
+  const [achievements, setAchievements] = useState<Achievement[]>([
+    {
+      id: 'first-workout',
+      name: 'First Step',
+      description: 'Complete your first workout',
+      unlocked: false,
+      progress: 0,
+      target: 1,
+      icon: '🎯'
+    },
+    {
+      id: 'workout-streak',
+      name: 'Consistency King',
+      description: 'Complete workouts 3 days in a row',
+      unlocked: false,
+      progress: 0,
+      target: 3,
+      icon: '🔥'
+    },
+    {
+      id: 'volleyball-master',
+      name: 'Volleyball Pro',
+      description: 'Complete 5 volleyball-specific workouts',
+      unlocked: false,
+      progress: 0,
+      target: 5,
+      icon: '🏐'
+    }
+  ]);
   const [newWorkout, setNewWorkout] = useState<CustomWorkout>({
     name: "",
     description: "",
@@ -147,6 +198,63 @@ const Schedule = () => {
     });
   };
 
+  const completeWorkout = (date: string, performance: WorkoutLog['performance']) => {
+    const newLog: WorkoutLog = {
+      date,
+      type: selectedType || 'custom',
+      description: 'Workout completed',
+      completed: true,
+      performance
+    };
+
+    setWorkoutLogs(prev => [...prev, newLog]);
+    
+    // Update achievements
+    const newAchievements = [...achievements];
+    
+    // First workout achievement
+    if (!newAchievements[0].unlocked) {
+      newAchievements[0].progress = 1;
+      newAchievements[0].unlocked = true;
+      toast({
+        title: "Achievement Unlocked! 🎉",
+        description: "You've completed your first workout!",
+      });
+    }
+
+    // Check for streak achievement
+    const recentLogs = workoutLogs
+      .filter(log => log.completed)
+      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+      .slice(0, 3);
+
+    if (recentLogs.length === 2 && !newAchievements[1].unlocked) {
+      newAchievements[1].progress++;
+      if (newAchievements[1].progress >= newAchievements[1].target) {
+        newAchievements[1].unlocked = true;
+        toast({
+          title: "Achievement Unlocked! 🔥",
+          description: "You've maintained a 3-day workout streak!",
+        });
+      }
+    }
+
+    // Volleyball master achievement
+    if (selectedType === 'volleyball') {
+      const volleyballAchievement = newAchievements[2];
+      volleyballAchievement.progress++;
+      if (volleyballAchievement.progress >= volleyballAchievement.target && !volleyballAchievement.unlocked) {
+        volleyballAchievement.unlocked = true;
+        toast({
+          title: "Achievement Unlocked! 🏐",
+          description: "You're now a Volleyball Pro!",
+        });
+      }
+    }
+
+    setAchievements(newAchievements);
+  };
+
   const selectedDayWorkout = date 
     ? workouts[format(date, 'yyyy-MM-dd')] 
     : null;
@@ -158,17 +266,35 @@ const Schedule = () => {
           <CalendarIcon className="w-8 h-8 text-primary" />
           <h1 className="text-3xl font-bold text-gray-900">Weekly Schedule</h1>
         </div>
-        <WorkoutCreationDialog
-          presetConfigurations={presetConfigurations}
-          presetWorkouts={presetWorkouts}
-          selectedExercises={selectedExercises}
-          newWorkout={newWorkout}
-          selectedPreset={selectedPreset}
-          onPresetSelect={handlePresetSelect}
-          onWorkoutChange={setNewWorkout}
-          onExercisesChange={setSelectedExercises}
-          onCreateWorkout={handleCreateWorkout}
-        />
+        <div className="flex items-center gap-4">
+          <Card className="p-4">
+            <div className="flex items-center gap-2">
+              <Trophy className="w-5 h-5 text-primary" />
+              <span className="font-medium">
+                {achievements.filter(a => a.unlocked).length} Achievements
+              </span>
+            </div>
+          </Card>
+          <Card className="p-4">
+            <div className="flex items-center gap-2">
+              <Activity className="w-5 h-5 text-primary" />
+              <span className="font-medium">
+                {workoutLogs.length} Workouts
+              </span>
+            </div>
+          </Card>
+          <WorkoutCreationDialog
+            presetConfigurations={presetConfigurations}
+            presetWorkouts={presetWorkouts}
+            selectedExercises={selectedExercises}
+            newWorkout={newWorkout}
+            selectedPreset={selectedPreset}
+            onPresetSelect={handlePresetSelect}
+            onWorkoutChange={setNewWorkout}
+            onExercisesChange={setSelectedExercises}
+            onCreateWorkout={handleCreateWorkout}
+          />
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
