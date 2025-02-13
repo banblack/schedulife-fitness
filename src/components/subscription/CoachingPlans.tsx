@@ -8,124 +8,159 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Check, Trophy, Target, Dumbbell, Calendar, MessageSquare, Clock, Heart } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Check, Trophy, Target, Calendar, MessageSquare, Heart, Star, Shield, Zap } from "lucide-react";
+import { useState } from "react";
+import { useToast } from "@/components/ui/use-toast";
 
 const CoachingPlans = () => {
+  const [billingInterval, setBillingInterval] = useState<'monthly' | 'yearly'>('monthly');
+  const { toast } = useToast();
+
+  const plans = [
+    {
+      name: "Basic Coaching",
+      description: "Perfect for beginners starting their fitness journey",
+      monthlyPrice: 49,
+      yearlyPrice: 470,
+      features: [
+        "1 Personal coaching session/month",
+        "Basic workout plan",
+        "Email support",
+        "Progress tracking",
+        "Access to workout library"
+      ],
+      popular: false,
+      icon: <Shield className="w-5 h-5" />
+    },
+    {
+      name: "Pro Coaching",
+      description: "Ideal for dedicated fitness enthusiasts",
+      monthlyPrice: 99,
+      yearlyPrice: 950,
+      features: [
+        "4 Personal coaching sessions/month",
+        "Customized workout plan",
+        "Nutrition guidance",
+        "24/7 chat support",
+        "Video form check",
+        "Monthly progress reviews",
+        "Custom meal plans"
+      ],
+      popular: true,
+      icon: <Star className="w-5 h-5" />
+    },
+    {
+      name: "Elite Coaching",
+      description: "For those seeking maximum results",
+      monthlyPrice: 199,
+      yearlyPrice: 1900,
+      features: [
+        "8 Personal coaching sessions/month",
+        "Advanced personalized workout plan",
+        "Detailed nutrition & meal planning",
+        "Priority 24/7 support",
+        "Progress tracking & analysis",
+        "Weekly video calls",
+        "Competition preparation",
+        "Recovery protocols",
+        "Sport-specific training"
+      ],
+      popular: false,
+      icon: <Zap className="w-5 h-5" />
+    }
+  ];
+
+  const handleSubscribe = (planName: string) => {
+    toast({
+      title: "Coming Soon!",
+      description: `${planName} subscription will be available shortly.`,
+    });
+  };
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <div className="flex items-center gap-2">
         <Trophy className="w-5 h-5 text-primary" />
         <h2 className="text-xl font-semibold">Premium Coaching Plans</h2>
       </div>
+
+      {/* Billing Toggle */}
+      <div className="flex justify-center gap-4 items-center">
+        <button
+          onClick={() => setBillingInterval('monthly')}
+          className={`px-4 py-2 rounded-lg transition-colors ${
+            billingInterval === 'monthly'
+              ? 'bg-primary text-white'
+              : 'bg-gray-100 hover:bg-gray-200'
+          }`}
+        >
+          Monthly
+        </button>
+        <button
+          onClick={() => setBillingInterval('yearly')}
+          className={`px-4 py-2 rounded-lg transition-colors ${
+            billingInterval === 'yearly'
+              ? 'bg-primary text-white'
+              : 'bg-gray-100 hover:bg-gray-200'
+          }`}
+        >
+          Yearly
+          <Badge variant="secondary" className="ml-2 bg-accent text-white">
+            Save 20%
+          </Badge>
+        </button>
+      </div>
       
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {/* Basic Plan */}
-        <Card className="relative overflow-hidden transition-transform hover:scale-105">
-          <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary to-accent" />
-          <CardHeader>
-            <CardTitle>Basic Coaching</CardTitle>
-            <CardDescription>Perfect for beginners starting their fitness journey</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <p className="text-3xl font-bold">$49<span className="text-sm font-normal">/month</span></p>
-            <ul className="space-y-2">
-              <li className="flex items-center gap-2">
-                <Check className="w-4 h-4 text-primary" />
-                <span>1 Personal coaching session/month</span>
-              </li>
-              <li className="flex items-center gap-2">
-                <Check className="w-4 h-4 text-primary" />
-                <span>Basic workout plan</span>
-              </li>
-              <li className="flex items-center gap-2">
-                <Check className="w-4 h-4 text-primary" />
-                <span>Email support</span>
-              </li>
-            </ul>
-          </CardContent>
-          <CardFooter>
-            <Button className="w-full bg-gradient-to-r from-primary to-accent hover:opacity-90">
-              Get Started
-            </Button>
-          </CardFooter>
-        </Card>
-
-        {/* Pro Plan */}
-        <Card className="relative overflow-hidden transition-transform hover:scale-105 border-primary/20 shadow-lg">
-          <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary to-accent" />
-          <div className="absolute top-4 right-4 bg-primary text-white text-xs px-2 py-1 rounded-full">
-            Popular
-          </div>
-          <CardHeader>
-            <CardTitle>Pro Coaching</CardTitle>
-            <CardDescription>Ideal for dedicated fitness enthusiasts</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <p className="text-3xl font-bold">$99<span className="text-sm font-normal">/month</span></p>
-            <ul className="space-y-2">
-              <li className="flex items-center gap-2">
-                <Check className="w-4 h-4 text-primary" />
-                <span>4 Personal coaching sessions/month</span>
-              </li>
-              <li className="flex items-center gap-2">
-                <Check className="w-4 h-4 text-primary" />
-                <span>Customized workout plan</span>
-              </li>
-              <li className="flex items-center gap-2">
-                <Check className="w-4 h-4 text-primary" />
-                <span>Nutrition guidance</span>
-              </li>
-              <li className="flex items-center gap-2">
-                <Check className="w-4 h-4 text-primary" />
-                <span>24/7 chat support</span>
-              </li>
-            </ul>
-          </CardContent>
-          <CardFooter>
-            <Button className="w-full bg-gradient-to-r from-primary to-accent hover:opacity-90">
-              Get Started
-            </Button>
-          </CardFooter>
-        </Card>
-
-        {/* Elite Plan */}
-        <Card className="relative overflow-hidden transition-transform hover:scale-105">
-          <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary to-accent" />
-          <CardHeader>
-            <CardTitle>Elite Coaching</CardTitle>
-            <CardDescription>For those seeking maximum results</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <p className="text-3xl font-bold">$199<span className="text-sm font-normal">/month</span></p>
-            <ul className="space-y-2">
-              <li className="flex items-center gap-2">
-                <Check className="w-4 h-4 text-primary" />
-                <span>8 Personal coaching sessions/month</span>
-              </li>
-              <li className="flex items-center gap-2">
-                <Check className="w-4 h-4 text-primary" />
-                <span>Advanced personalized workout plan</span>
-              </li>
-              <li className="flex items-center gap-2">
-                <Check className="w-4 h-4 text-primary" />
-                <span>Detailed nutrition & meal planning</span>
-              </li>
-              <li className="flex items-center gap-2">
-                <Check className="w-4 h-4 text-primary" />
-                <span>Priority 24/7 support</span>
-              </li>
-              <li className="flex items-center gap-2">
-                <Check className="w-4 h-4 text-primary" />
-                <span>Progress tracking & analysis</span>
-              </li>
-            </ul>
-          </CardContent>
-          <CardFooter>
-            <Button className="w-full bg-gradient-to-r from-primary to-accent hover:opacity-90">
-              Get Started
-            </Button>
-          </CardFooter>
-        </Card>
+        {plans.map((plan) => (
+          <Card 
+            key={plan.name} 
+            className={`relative overflow-hidden transition-all hover:scale-105 ${
+              plan.popular ? 'border-primary/20 shadow-lg' : ''
+            }`}
+          >
+            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary to-accent" />
+            {plan.popular && (
+              <div className="absolute top-4 right-4 bg-primary text-white text-xs px-2 py-1 rounded-full">
+                Most Popular
+              </div>
+            )}
+            <CardHeader>
+              <div className="flex items-center gap-2 mb-2">
+                <div className="p-2 rounded-full bg-primary/10 text-primary">
+                  {plan.icon}
+                </div>
+                <CardTitle>{plan.name}</CardTitle>
+              </div>
+              <CardDescription>{plan.description}</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <p className="text-3xl font-bold">
+                ${billingInterval === 'monthly' ? plan.monthlyPrice : plan.yearlyPrice}
+                <span className="text-sm font-normal text-muted-foreground">
+                  /{billingInterval === 'monthly' ? 'month' : 'year'}
+                </span>
+              </p>
+              <ul className="space-y-2">
+                {plan.features.map((feature, index) => (
+                  <li key={index} className="flex items-center gap-2">
+                    <Check className="w-4 h-4 text-primary" />
+                    <span>{feature}</span>
+                  </li>
+                ))}
+              </ul>
+            </CardContent>
+            <CardFooter>
+              <Button 
+                className="w-full bg-gradient-to-r from-primary to-accent hover:opacity-90"
+                onClick={() => handleSubscribe(plan.name)}
+              >
+                Get Started
+              </Button>
+            </CardFooter>
+          </Card>
+        ))}
       </div>
 
       {/* Features Section */}
