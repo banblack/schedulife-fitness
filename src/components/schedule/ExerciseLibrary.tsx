@@ -1,9 +1,11 @@
 
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Dumbbell } from "lucide-react";
+import { Dumbbell, Loader2 } from "lucide-react";
 import { Exercise } from "@/types/exercise";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/lib/supabase";
 
 interface ExerciseLibraryProps {
   presetWorkouts: Record<string, Exercise[]>;
@@ -18,13 +20,37 @@ export const ExerciseLibrary = ({
   onTypeSelect,
   searchQuery 
 }: ExerciseLibraryProps) => {
-  const filteredExercises = selectedType 
-    ? presetWorkouts[selectedType].filter(exercise => 
-        exercise.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        exercise.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        exercise.muscleGroup?.toLowerCase().includes(searchQuery.toLowerCase())
-      )
+  const { data: dbExercises, isLoading } = useQuery({
+    queryKey: ['exercises', selectedType],
+    queryFn: async () => {
+      const query = supabase
+        .from('exercises')
+        .select('*');
+      
+      if (selectedType) {
+        query.eq('type', selectedType);
+      }
+
+      const { data, error } = await query;
+      
+      if (error) {
+        throw error;
+      }
+
+      return data as Exercise[];
+    }
+  });
+
+  // Combine preset workouts with database exercises
+  const allExercises = selectedType
+    ? [...(presetWorkouts[selectedType] || []), ...(dbExercises || [])]
     : [];
+
+  const filteredExercises = allExercises.filter(exercise => 
+    exercise.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    exercise.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    exercise.muscleGroup?.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   const getDifficultyColor = (difficulty: string) => {
     switch (difficulty) {
@@ -41,9 +67,17 @@ export const ExerciseLibrary = ({
 
   return (
     <Card className="p-4">
-      <div className="flex items-center gap-2 mb-4">
-        <Dumbbell className="w-6 h-6 text-primary" />
-        <h2 className="text-xl font-semibold">Exercise Library</h2>
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-2">
+          <Dumbbell className="w-6 h-6 text-primary" />
+          <h2 className="text-xl font-semibold">Exercise Library</h2>
+        </div>
+        {isLoading && (
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <Loader2 className="w-4 h-4 animate-spin" />
+            Loading exercises...
+          </div>
+        )}
       </div>
       
       <div className="flex flex-wrap gap-2 mb-4">
@@ -88,6 +122,16 @@ export const ExerciseLibrary = ({
                     <p className="text-xs text-muted-foreground">
                       Target: {exercise.muscleGroup}
                     </p>
+                  )}
+                  {exercise.videoUrl && (
+                    <a 
+                      href={exercise.videoUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-xs text-primary hover:underline"
+                    >
+                      Watch Tutorial
+                    </a>
                   )}
                 </div>
               </Card>
