@@ -9,27 +9,10 @@ import { ExerciseLibrary } from "@/components/schedule/ExerciseLibrary";
 import { WorkoutCreationDialog } from "@/components/schedule/WorkoutCreationDialog";
 import { CustomWorkoutsList } from "@/components/schedule/CustomWorkoutsList";
 import { useToast } from "@/hooks/use-toast";
+import { exercises } from "@/lib/exercises";
 
 // Preset workouts database
-const presetWorkouts = {
-  volleyball: [
-    { name: "Vertical Jump Training", sets: 4, reps: "8-12", equipment: "Box/Platform" },
-    { name: "Shoulder Stability", sets: 3, reps: "12-15", equipment: "Resistance Bands" },
-    { name: "Agility Drills", sets: 3, reps: "30s each", equipment: "Cones" },
-    { name: "Explosive Power", sets: 4, reps: "6-8", equipment: "Medicine Ball" },
-    { name: "Core Stability", sets: 3, reps: "15-20", equipment: "Mat" }
-  ],
-  strength: [
-    { name: "Bench Press", sets: 4, reps: "8-12", equipment: "Barbell" },
-    { name: "Squats", sets: 4, reps: "8-12", equipment: "Barbell" },
-    { name: "Deadlifts", sets: 3, reps: "8-10", equipment: "Barbell" }
-  ],
-  cardio: [
-    { name: "HIIT", sets: 1, reps: "20min", equipment: "None" },
-    { name: "Jump Rope", sets: 3, reps: "5min", equipment: "Jump Rope" },
-    { name: "Sprint Intervals", sets: 5, reps: "30s/30s", equipment: "None" }
-  ]
-};
+const presetWorkouts = exercises;
 
 // Preset configurations for different experience levels
 const presetConfigurations = {
