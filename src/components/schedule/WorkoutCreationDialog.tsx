@@ -9,8 +9,10 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { DialogDescription } from "@/components/ui/dialog";
 import { Plus, Save, X } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
+import { useState } from "react";
 
 interface WorkoutCreationDialogProps {
   presetConfigurations: any;
@@ -35,8 +37,37 @@ export const WorkoutCreationDialog = ({
   onExercisesChange,
   onCreateWorkout
 }: WorkoutCreationDialogProps) => {
+  const [isOpen, setIsOpen] = useState(false);
+
+  const handleCreateAndClose = () => {
+    if (!newWorkout.name.trim()) {
+      toast({
+        title: "Error",
+        description: "Please provide a workout name",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (selectedExercises.length === 0) {
+      toast({
+        title: "Error",
+        description: "Please select at least one exercise",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    onCreateWorkout();
+    setIsOpen(false);
+    toast({
+      title: "Success",
+      description: "Workout created successfully",
+    });
+  };
+
   return (
-    <Dialog>
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
         <Button>
           <Plus className="w-4 h-4 mr-2" />
@@ -46,6 +77,9 @@ export const WorkoutCreationDialog = ({
       <DialogContent className="max-w-2xl">
         <DialogHeader>
           <DialogTitle>Create Custom Workout</DialogTitle>
+          <DialogDescription>
+            Design your perfect workout routine by selecting exercises and customizing your preferences.
+          </DialogDescription>
         </DialogHeader>
         <div className="h-[600px] overflow-hidden">
           <ScrollArea className="h-full pr-4">
@@ -54,6 +88,7 @@ export const WorkoutCreationDialog = ({
                 <Label>Choose Level</Label>
                 <RadioGroup
                   onValueChange={onPresetSelect}
+                  value={selectedPreset || undefined}
                   className="grid grid-cols-3 gap-4"
                 >
                   {Object.entries(presetConfigurations).map(([key, config]: [string, any]) => (
@@ -145,14 +180,15 @@ export const WorkoutCreationDialog = ({
                 </ScrollArea>
               </div>
               <div className="flex justify-end gap-2">
-                <DialogTrigger asChild>
-                  <Button variant="outline">
-                    <X className="w-4 h-4 mr-2" />
-                    Cancel
-                  </Button>
-                </DialogTrigger>
                 <Button 
-                  onClick={onCreateWorkout} 
+                  variant="outline" 
+                  onClick={() => setIsOpen(false)}
+                >
+                  <X className="w-4 h-4 mr-2" />
+                  Cancel
+                </Button>
+                <Button 
+                  onClick={handleCreateAndClose}
                   disabled={!newWorkout.name || selectedExercises.length === 0}
                 >
                   <Save className="w-4 h-4 mr-2" />
