@@ -12,6 +12,7 @@ CREATE TABLE IF NOT EXISTS users (
   height NUMERIC,
   weight NUMERIC,
   fitness_goals TEXT,
+  is_admin BOOLEAN DEFAULT FALSE,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   PRIMARY KEY (id)
@@ -21,10 +22,27 @@ CREATE TABLE IF NOT EXISTS users (
 ALTER TABLE users ENABLE ROW LEVEL SECURITY;
 
 -- Create policies
--- Allow users to view and edit only their own data
+-- Allow admins to view all data
+CREATE POLICY "Admins can view all data" ON users
+  FOR SELECT USING (
+    auth.uid() IN (
+      SELECT id FROM users WHERE is_admin = true
+    )
+  );
+
+-- Allow users to view their own data
 CREATE POLICY "Users can view own data" ON users
   FOR SELECT USING (auth.uid() = id);
 
+-- Allow admins to update all data
+CREATE POLICY "Admins can update all data" ON users
+  FOR UPDATE USING (
+    auth.uid() IN (
+      SELECT id FROM users WHERE is_admin = true
+    )
+  );
+
+-- Allow users to update their own data
 CREATE POLICY "Users can update own data" ON users
   FOR UPDATE USING (auth.uid() = id);
 
@@ -40,3 +58,14 @@ SECURITY DEFINER
 AS $$
   SELECT * FROM users WHERE id = user_id;
 $$;
+
+-- Create the first admin user
+-- Replace 'your.admin@email.com' with the actual admin email you want to use
+INSERT INTO users (id, email, full_name, is_admin)
+VALUES (
+  '00000000-0000-0000-0000-000000000000',
+  'admin@fittrack.com',
+  'System Admin',
+  TRUE
+);
+
