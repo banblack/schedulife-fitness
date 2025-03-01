@@ -1,363 +1,110 @@
-import { Card } from "@/components/ui/card";
-import { Calendar } from "@/components/ui/calendar";
-import { Search, CalendarIcon, Trophy, Activity } from "lucide-react";
+
 import { useState } from "react";
-import { Input } from "@/components/ui/input";
-import { format } from "date-fns";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { WeeklySchedule } from "@/components/schedule/WeeklySchedule";
 import { ExerciseLibrary } from "@/components/schedule/ExerciseLibrary";
 import { WorkoutCreationDialog } from "@/components/schedule/WorkoutCreationDialog";
 import { CustomWorkoutsList } from "@/components/schedule/CustomWorkoutsList";
 import { WorkoutCompletionDialog } from "@/components/schedule/WorkoutCompletionDialog";
 import { WorkoutStatistics } from "@/components/schedule/WorkoutStatistics";
-import { useToast } from "@/hooks/use-toast";
-import { exercises } from "@/lib/exercises";
-
-// Preset workouts database
-const presetWorkouts = exercises;
-
-// Preset configurations for different experience levels
-const presetConfigurations = {
-  beginner: {
-    name: "Beginner Volleyball Program",
-    description: "Perfect for those just starting volleyball training. Focus on fundamentals and building basic strength.",
-    weeklySchedule: [
-      { day: "Monday", focus: "Basic Skills", intensity: "Light" },
-      { day: "Wednesday", focus: "Strength", intensity: "Light" },
-      { day: "Friday", focus: "Cardio", intensity: "Light" }
-    ]
-  },
-  intermediate: {
-    name: "Intermediate Volleyball Program",
-    description: "For players with some experience. Focuses on skill development and conditioning.",
-    weeklySchedule: [
-      { day: "Monday", focus: "Skills & Drills", intensity: "Moderate" },
-      { day: "Tuesday", focus: "Strength", intensity: "Moderate" },
-      { day: "Thursday", focus: "Power & Agility", intensity: "High" },
-      { day: "Friday", focus: "Match Practice", intensity: "Moderate" }
-    ]
-  },
-  advanced: {
-    name: "Advanced Volleyball Program",
-    description: "High-intensity program for competitive players.",
-    weeklySchedule: [
-      { day: "Monday", focus: "Skills & Strategy", intensity: "High" },
-      { day: "Tuesday", focus: "Power", intensity: "High" },
-      { day: "Wednesday", focus: "Recovery & Technique", intensity: "Light" },
-      { day: "Thursday", focus: "Speed & Agility", intensity: "High" },
-      { day: "Friday", focus: "Match Simulation", intensity: "High" },
-      { day: "Saturday", focus: "Conditioning", intensity: "Moderate" }
-    ]
-  }
-};
-
-interface CustomWorkout {
-  name: string;
-  description: string;
-  exercises: {
-    name: string;
-    sets: number;
-    reps: string;
-    equipment: string;
-  }[];
-}
-
-interface WorkoutLog {
-  date: string;
-  type: string;
-  description: string;
-  completed: boolean;
-  performance?: {
-    duration: number;
-    intensity: 'Low' | 'Medium' | 'High';
-    notes: string;
-  };
-}
-
-interface Achievement {
-  id: string;
-  name: string;
-  description: string;
-  unlocked: boolean;
-  progress: number;
-  target: number;
-  icon: string;
-}
+import { WorkoutHistory } from "@/components/schedule/WorkoutHistory";
+import { ProgressChart } from "@/components/schedule/ProgressChart";
+import { CalendarDays, Dumbbell, LineChart, Plus } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 const Schedule = () => {
-  const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-  const [date, setDate] = useState<Date | undefined>(new Date());
-  const [searchQuery, setSearchQuery] = useState("");
-  const [selectedType, setSelectedType] = useState<keyof typeof presetWorkouts | null>(null);
-  const [customWorkouts, setCustomWorkouts] = useState<CustomWorkout[]>([]);
-  const [workoutLogs, setWorkoutLogs] = useState<WorkoutLog[]>([]);
-  const [achievements, setAchievements] = useState<Achievement[]>([
-    {
-      id: 'first-workout',
-      name: 'First Step',
-      description: 'Complete your first workout',
-      unlocked: false,
-      progress: 0,
-      target: 1,
-      icon: '🎯'
-    },
-    {
-      id: 'workout-streak',
-      name: 'Consistency King',
-      description: 'Complete workouts 3 days in a row',
-      unlocked: false,
-      progress: 0,
-      target: 3,
-      icon: '🔥'
-    },
-    {
-      id: 'volleyball-master',
-      name: 'Volleyball Pro',
-      description: 'Complete 5 volleyball-specific workouts',
-      unlocked: false,
-      progress: 0,
-      target: 5,
-      icon: '🏐'
-    }
-  ]);
-  const [newWorkout, setNewWorkout] = useState<CustomWorkout>({
-    name: "",
-    description: "",
-    exercises: []
-  });
-  const [selectedExercises, setSelectedExercises] = useState<string[]>([]);
-  const [selectedPreset, setSelectedPreset] = useState<keyof typeof presetConfigurations | null>(null);
-  const { toast } = useToast();
-  
-  const workouts = {
-    "2024-04-15": { type: "Volleyball", description: "Skills training" },
-    "2024-04-10": { type: "Strength", description: "Upper body" },
+  const [isWorkoutCreationOpen, setIsWorkoutCreationOpen] = useState(false);
+  const [isWorkoutCompletionOpen, setIsWorkoutCompletionOpen] = useState(false);
+  const [selectedWorkout, setSelectedWorkout] = useState<string | null>(null);
+  const [selectedWorkoutName, setSelectedWorkoutName] = useState<string>("");
+
+  const handleWorkoutComplete = (workoutId: string, workoutName: string) => {
+    setSelectedWorkout(workoutId);
+    setSelectedWorkoutName(workoutName);
+    setIsWorkoutCompletionOpen(true);
   };
-
-  const handleCreateWorkout = () => {
-    if (!newWorkout.name) {
-      toast({
-        title: "Error",
-        description: "Please provide a workout name",
-        variant: "destructive"
-      });
-      return;
-    }
-    
-    if (selectedExercises.length === 0) {
-      toast({
-        title: "Error",
-        description: "Please select at least one exercise",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    const selectedWorkoutExercises = Object.values(presetWorkouts)
-      .flat()
-      .filter(exercise => selectedExercises.includes(exercise.name));
-
-    const workoutToAdd = {
-      ...newWorkout,
-      exercises: selectedWorkoutExercises
-    };
-
-    setCustomWorkouts([...customWorkouts, workoutToAdd]);
-    setNewWorkout({ name: "", description: "", exercises: [] });
-    setSelectedExercises([]);
-    
-    toast({
-      title: "Success",
-      description: "Workout created successfully",
-    });
-  };
-
-  const handlePresetSelect = (preset: keyof typeof presetConfigurations) => {
-    setSelectedPreset(preset);
-    const config = presetConfigurations[preset];
-    
-    setNewWorkout({
-      name: config.name,
-      description: config.description,
-      exercises: []
-    });
-  };
-
-  const completeWorkout = (date: string, performance: WorkoutLog['performance']) => {
-    const newLog: WorkoutLog = {
-      date,
-      type: selectedType || 'custom',
-      description: 'Workout completed',
-      completed: true,
-      performance
-    };
-
-    setWorkoutLogs(prev => [newLog, ...prev]);
-    
-    // Update achievements
-    const newAchievements = [...achievements];
-    
-    // First workout achievement
-    if (!newAchievements[0].unlocked) {
-      newAchievements[0].progress = 1;
-      newAchievements[0].unlocked = true;
-      toast({
-        title: "Achievement Unlocked! 🎉",
-        description: "You've completed your first workout!",
-      });
-    }
-
-    // Check for streak achievement
-    const recentLogs = [newLog, ...workoutLogs.filter(log => log.completed)]
-      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-
-    // Calculate streak
-    let streak = 1;
-    for (let i = 0; i < recentLogs.length - 1; i++) {
-      const currentDate = new Date(recentLogs[i].date);
-      const prevDate = new Date(recentLogs[i + 1].date);
-      
-      const diffDays = Math.floor((currentDate.getTime() - prevDate.getTime()) / (1000 * 60 * 60 * 24));
-      
-      if (diffDays === 1) {
-        streak++;
-      } else {
-        break;
-      }
-    }
-
-    // Update streak achievement
-    if (streak >= 3 && !newAchievements[1].unlocked) {
-      newAchievements[1].progress = streak;
-      newAchievements[1].unlocked = true;
-      toast({
-        title: "Achievement Unlocked! 🔥",
-        description: "You've maintained a 3-day workout streak!",
-      });
-    } else if (streak > newAchievements[1].progress) {
-      newAchievements[1].progress = streak;
-    }
-
-    // Volleyball master achievement
-    if (selectedType === 'volleyball') {
-      const volleyballAchievement = newAchievements[2];
-      volleyballAchievement.progress++;
-      if (volleyballAchievement.progress >= volleyballAchievement.target && !volleyballAchievement.unlocked) {
-        volleyballAchievement.unlocked = true;
-        toast({
-          title: "Achievement Unlocked! 🏐",
-          description: "You're now a Volleyball Pro!",
-        });
-      }
-    }
-
-    setAchievements(newAchievements);
-  };
-
-  const selectedDayWorkout = date 
-    ? workouts[format(date, 'yyyy-MM-dd')] 
-    : null;
 
   return (
-    <div className="container px-4 py-8 animate-fade-in">
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-3">
-          <CalendarIcon className="w-8 h-8 text-primary" />
-          <h1 className="text-3xl font-bold text-gray-900">Weekly Schedule</h1>
-        </div>
-        <div className="flex items-center gap-4">
-          <Card className="p-4">
-            <div className="flex items-center gap-2">
-              <Trophy className="w-5 h-5 text-primary" />
-              <span className="font-medium">
-                {achievements.filter(a => a.unlocked).length} Achievements
-              </span>
-            </div>
-          </Card>
-          <Card className="p-4">
-            <div className="flex items-center gap-2">
-              <Activity className="w-5 h-5 text-primary" />
-              <span className="font-medium">
-                {workoutLogs.length} Workouts
-              </span>
-            </div>
-          </Card>
-          <WorkoutCreationDialog
-            presetConfigurations={presetConfigurations}
-            presetWorkouts={presetWorkouts}
-            selectedExercises={selectedExercises}
-            newWorkout={newWorkout}
-            selectedPreset={selectedPreset}
-            onPresetSelect={handlePresetSelect}
-            onWorkoutChange={setNewWorkout}
-            onExercisesChange={setSelectedExercises}
-            onCreateWorkout={handleCreateWorkout}
-          />
-        </div>
-      </div>
-
-      <WorkoutStatistics
-        workoutLogs={workoutLogs}
-        achievements={achievements}
-      />
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-8">
-        <WeeklySchedule days={days} />
-
-        <div className="space-y-6">
-          <div className="flex flex-col gap-4">
-            <div className="flex items-center gap-2">
-              <Search className="w-6 h-6 text-gray-500" />
-              <Input
-                type="text"
-                placeholder="Search exercises..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="flex-1"
-              />
-            </div>
-            
-            <Card className="p-4">
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="font-medium">Select Date & Log Workout</h3>
-                {date && selectedType && (
-                  <WorkoutCompletionDialog
-                    date={date}
-                    workoutType={selectedType}
-                    onComplete={completeWorkout}
-                  />
-                )}
-              </div>
-              <Calendar
-                mode="single"
-                selected={date}
-                onSelect={setDate}
-                className="rounded-md border"
-              />
-
-              {selectedDayWorkout && (
-                <div className="mt-4 p-4 bg-primary/5 rounded-lg">
-                  <h3 className="font-medium mb-2">
-                    Workout on {date ? format(date, 'MMMM d, yyyy') : ''}
-                  </h3>
-                  <p className="text-sm text-neutral">
-                    {selectedDayWorkout.type} - {selectedDayWorkout.description}
-                  </p>
+    <div className="container mx-auto p-4 space-y-6">
+      <div className="flex flex-col lg:flex-row gap-6">
+        <div className="lg:w-8/12 space-y-6">
+          <Card>
+            <CardHeader className="pb-2">
+              <div className="flex items-center justify-between">
+                <div className="space-y-1">
+                  <CardTitle className="flex items-center gap-2">
+                    <CalendarDays className="h-5 w-5 text-primary" />
+                    Weekly Schedule
+                  </CardTitle>
+                  <CardDescription>
+                    Plan and track your weekly workout routine
+                  </CardDescription>
                 </div>
-              )}
-            </Card>
+                <Button onClick={() => setIsWorkoutCreationOpen(true)} size="sm">
+                  <Plus className="w-4 h-4 mr-1" /> New Workout
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <WeeklySchedule onWorkoutComplete={handleWorkoutComplete} />
+            </CardContent>
+          </Card>
 
-            <ExerciseLibrary
-              presetWorkouts={presetWorkouts}
-              selectedType={selectedType}
-              onTypeSelect={(type: keyof typeof presetWorkouts) => setSelectedType(type)}
-              searchQuery={searchQuery}
-            />
-          </div>
+          <Tabs defaultValue="history">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="history">Workout History</TabsTrigger>
+              <TabsTrigger value="progress">Progress Tracking</TabsTrigger>
+            </TabsList>
+            <TabsContent value="history" className="pt-4">
+              <WorkoutHistory />
+            </TabsContent>
+            <TabsContent value="progress" className="pt-4">
+              <ProgressChart />
+            </TabsContent>
+          </Tabs>
+        </div>
+
+        <div className="lg:w-4/12 space-y-6">
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="flex items-center gap-2">
+                <LineChart className="h-5 w-5 text-primary" />
+                Workout Statistics
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <WorkoutStatistics />
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="flex items-center gap-2">
+                <Dumbbell className="h-5 w-5 text-primary" />
+                Exercise Library
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ExerciseLibrary />
+            </CardContent>
+          </Card>
+
+          <CustomWorkoutsList onWorkoutComplete={handleWorkoutComplete} />
         </div>
       </div>
 
-      <CustomWorkoutsList workouts={customWorkouts} />
+      <WorkoutCreationDialog 
+        open={isWorkoutCreationOpen} 
+        onOpenChange={setIsWorkoutCreationOpen} 
+      />
+      
+      <WorkoutCompletionDialog 
+        open={isWorkoutCompletionOpen} 
+        onOpenChange={setIsWorkoutCompletionOpen} 
+        workoutId={selectedWorkout} 
+        workoutName={selectedWorkoutName}
+      />
     </div>
   );
 };

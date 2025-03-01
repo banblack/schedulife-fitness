@@ -1,198 +1,170 @@
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
-import { Trophy, Calendar, Dumbbell, Flame } from "lucide-react";
+import { useState, useEffect } from "react";
+import { CalendarCheck, Award, Flame, TrendingUp, Clock, Loader2 } from "lucide-react";
+import { workoutLogService } from "@/services/workoutLogService";
 
-interface WorkoutLog {
-  date: string;
-  type: string;
-  description: string;
-  completed: boolean;
-  performance?: {
-    duration: number;
-    intensity: 'Low' | 'Medium' | 'High';
-    notes: string;
-  };
-}
-
-interface Achievement {
-  id: string;
-  name: string;
-  description: string;
-  unlocked: boolean;
-  progress: number;
-  target: number;
-  icon: string;
-}
-
-interface WorkoutStatisticsProps {
-  workoutLogs: WorkoutLog[];
-  achievements: Achievement[];
-}
-
-export function WorkoutStatistics({ workoutLogs, achievements }: WorkoutStatisticsProps) {
-  const completedWorkouts = workoutLogs.filter(log => log.completed);
-  const totalWorkoutMinutes = completedWorkouts.reduce(
-    (total, log) => total + (log.performance?.duration || 0), 
-    0
-  );
-  
-  // Get count of workouts by type
-  const workoutsByType: Record<string, number> = {};
-  completedWorkouts.forEach(log => {
-    workoutsByType[log.type] = (workoutsByType[log.type] || 0) + 1;
+export function WorkoutStatistics() {
+  const [stats, setStats] = useState({
+    totalWorkouts: 0,
+    currentStreak: 0,
+    longestStreak: 0,
+    totalDuration: 0,
+    thisMonthWorkouts: 0,
+    lastMonthWorkouts: 0,
   });
-
-  // Current streak calculation
-  const calculateStreak = (): number => {
-    if (completedWorkouts.length === 0) return 0;
-    
-    const sortedDates = completedWorkouts
-      .map(log => new Date(log.date))
-      .sort((a, b) => b.getTime() - a.getTime());
-    
-    let streak = 1;
-    for (let i = 0; i < sortedDates.length - 1; i++) {
-      const currentDate = sortedDates[i];
-      const nextDate = sortedDates[i + 1];
-      
-      const diffTime = currentDate.getTime() - nextDate.getTime();
-      const diffDays = diffTime / (1000 * 60 * 60 * 24);
-      
-      if (diffDays <= 1) {
-        streak++;
-      } else {
-        break;
+  const [loading, setLoading] = useState(true);
+  
+  useEffect(() => {
+    const fetchStatistics = async () => {
+      setLoading(true);
+      try {
+        const workoutStats = await workoutLogService.getWorkoutStatistics();
+        setStats(workoutStats);
+      } catch (error) {
+        console.error("Error fetching workout statistics:", error);
+      } finally {
+        setLoading(false);
       }
-    }
+    };
     
-    return streak;
-  };
-
+    fetchStatistics();
+  }, []);
+  
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center p-12">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+  
+  // Calculate consistency percentage
+  const monthComparison = stats.lastMonthWorkouts > 0 
+    ? Math.round((stats.thisMonthWorkouts / stats.lastMonthWorkouts) * 100)
+    : stats.thisMonthWorkouts > 0 ? 100 : 0;
+  
+  const monthTrend = stats.thisMonthWorkouts - stats.lastMonthWorkouts;
+  
+  // Calculate achievement progress
+  const firstStepProgress = stats.totalWorkouts > 0 ? 100 : 0;
+  const consistencyKingProgress = Math.min(stats.currentStreak / 5 * 100, 100);
+  const volleyballProProgress = Math.min(stats.totalWorkouts / 10 * 100, 100);
+  const dedicationProgress = Math.min(stats.totalWorkouts / 30 * 100, 100);
+  
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Total Workouts</CardTitle>
-            <Dumbbell className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{completedWorkouts.length}</div>
-            <p className="text-xs text-muted-foreground mt-1">
-              {totalWorkoutMinutes} total minutes
-            </p>
-          </CardContent>
-        </Card>
+      <div className="grid grid-cols-2 gap-4">
+        <div className="bg-primary/5 p-4 rounded-lg border border-primary/10">
+          <div className="flex items-center gap-2 mb-2">
+            <CalendarCheck className="h-4 w-4 text-primary" />
+            <h3 className="text-sm font-medium">Current Streak</h3>
+          </div>
+          <p className="text-2xl font-bold">{stats.currentStreak} days</p>
+          <p className="text-xs text-muted-foreground mt-1">Best: {stats.longestStreak} days</p>
+        </div>
         
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Current Streak</CardTitle>
-            <Flame className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{calculateStreak()}</div>
-            <p className="text-xs text-muted-foreground mt-1">
-              Consecutive workout days
-            </p>
-          </CardContent>
-        </Card>
+        <div className="bg-primary/5 p-4 rounded-lg border border-primary/10">
+          <div className="flex items-center gap-2 mb-2">
+            <Flame className="h-4 w-4 text-primary" />
+            <h3 className="text-sm font-medium">This Month</h3>
+          </div>
+          <p className="text-2xl font-bold">{stats.thisMonthWorkouts} workouts</p>
+          <p className="text-xs text-muted-foreground mt-1">
+            {monthTrend > 0 && '+'}{monthTrend} from last month
+          </p>
+        </div>
+
+        <div className="bg-primary/5 p-4 rounded-lg border border-primary/10">
+          <div className="flex items-center gap-2 mb-2">
+            <Clock className="h-4 w-4 text-primary" />
+            <h3 className="text-sm font-medium">Total Time</h3>
+          </div>
+          <p className="text-2xl font-bold">
+            {Math.floor(stats.totalDuration / 60)} hours {stats.totalDuration % 60} min
+          </p>
+          <p className="text-xs text-muted-foreground mt-1">Lifetime</p>
+        </div>
         
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Achievements</CardTitle>
-            <Trophy className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {achievements.filter(a => a.unlocked).length}/{achievements.length}
-            </div>
-            <p className="text-xs text-muted-foreground mt-1">
-              Unlocked achievements
-            </p>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Last Workout</CardTitle>
-            <Calendar className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold capitalize">
-              {completedWorkouts.length > 0 
-                ? completedWorkouts[0].type 
-                : "None"}
-            </div>
-            <p className="text-xs text-muted-foreground mt-1">
-              {completedWorkouts.length > 0 
-                ? completedWorkouts[0].date 
-                : "No workouts logged"}
-            </p>
-          </CardContent>
-        </Card>
+        <div className="bg-primary/5 p-4 rounded-lg border border-primary/10">
+          <div className="flex items-center gap-2 mb-2">
+            <TrendingUp className="h-4 w-4 text-primary" />
+            <h3 className="text-sm font-medium">Consistency</h3>
+          </div>
+          <p className="text-2xl font-bold">{monthComparison}%</p>
+          <p className="text-xs text-muted-foreground mt-1">vs. last month</p>
+        </div>
       </div>
       
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Trophy className="h-5 w-5 text-primary" />
-            Achievements
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            {achievements.map((achievement) => (
-              <div key={achievement.id} className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <div className="text-xl">{achievement.icon}</div>
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <div className="font-medium">{achievement.name}</div>
-                        {achievement.unlocked && (
-                          <Badge className="bg-green-500">Unlocked</Badge>
-                        )}
-                      </div>
-                      <div className="text-sm text-muted-foreground">
-                        {achievement.description}
-                      </div>
-                    </div>
-                  </div>
-                  <div className="text-sm">
-                    {achievement.progress}/{achievement.target}
-                  </div>
-                </div>
-                <Progress 
-                  value={(achievement.progress / achievement.target) * 100} 
-                  className={achievement.unlocked ? "bg-green-100" : ""}
-                />
-              </div>
-            ))}
+      <div>
+        <h3 className="text-sm font-medium mb-3 flex items-center gap-2">
+          <Award className="h-4 w-4 text-primary" />
+          Achievements
+        </h3>
+        <div className="space-y-3">
+          <AchievementItem 
+            name="First Step" 
+            description="Complete your first workout"
+            progress={firstStepProgress}
+            unlocked={firstStepProgress >= 100}
+          />
+          <AchievementItem 
+            name="Consistency King" 
+            description="Work out 5 days in a row"
+            progress={consistencyKingProgress}
+            unlocked={consistencyKingProgress >= 100}
+          />
+          <AchievementItem 
+            name="Volleyball Pro" 
+            description="Complete 10 volleyball-specific workouts"
+            progress={volleyballProProgress}
+            unlocked={volleyballProProgress >= 100}
+          />
+          <AchievementItem 
+            name="Dedication" 
+            description="Log 30 workouts total"
+            progress={dedicationProgress}
+            unlocked={dedicationProgress >= 100}
+          />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+interface AchievementItemProps {
+  name: string;
+  description: string;
+  progress: number;
+  unlocked: boolean;
+}
+
+function AchievementItem({ name, description, progress, unlocked }: AchievementItemProps) {
+  return (
+    <div className={`p-3 rounded-lg border ${unlocked ? 'bg-yellow-50 border-yellow-200' : 'bg-gray-50 border-gray-200'}`}>
+      <div className="flex items-center justify-between mb-2">
+        <div className="flex items-center gap-2">
+          <div className={`w-6 h-6 rounded-full flex items-center justify-center ${
+            unlocked ? 'bg-yellow-500 text-white' : 'bg-gray-200 text-gray-500'
+          }`}>
+            {unlocked ? (
+              <Award className="h-3 w-3" />
+            ) : (
+              <Award className="h-3 w-3" />
+            )}
           </div>
-        </CardContent>
-      </Card>
-      
-      {completedWorkouts.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Dumbbell className="h-5 w-5 text-primary" />
-              Workout Types
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex flex-wrap gap-2">
-              {Object.entries(workoutsByType).map(([type, count]) => (
-                <Badge key={type} variant="outline" className="py-2">
-                  <span className="capitalize">{type}:</span> {count}
-                </Badge>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      )}
+          <h4 className={`text-sm font-medium ${unlocked ? 'text-yellow-700' : 'text-gray-700'}`}>
+            {name}
+          </h4>
+        </div>
+        {unlocked && <span className="text-xs font-medium text-yellow-600">Unlocked!</span>}
+      </div>
+      <p className="text-xs text-muted-foreground mb-2">{description}</p>
+      <div className="w-full bg-gray-200 rounded-full h-1.5">
+        <div 
+          className={`h-1.5 rounded-full ${unlocked ? 'bg-yellow-500' : 'bg-primary'}`} 
+          style={{ width: `${progress}%` }}
+        ></div>
+      </div>
     </div>
   );
 }
