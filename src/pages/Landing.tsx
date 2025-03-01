@@ -1,128 +1,164 @@
 
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import { useNavigate } from "react-router-dom";
-import { Dumbbell, Calendar, User, ArrowRight, BookOpen } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Dumbbell, UserPlus, LogIn, ChevronRight } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Landing = () => {
   const navigate = useNavigate();
-
-  const features = [
-    {
-      icon: <Dumbbell className="w-12 h-12 text-primary" />,
-      title: "Workout Library",
-      description: "Access our comprehensive collection of exercises for every muscle group. Browse through carefully curated workouts designed for all fitness levels.",
-      details: [
-        "Search exercises by muscle group",
-        "View detailed exercise instructions",
-        "Get recommended sets and reps",
-        "Find suitable alternatives for each exercise"
-      ]
-    },
-    {
-      icon: <Calendar className="w-12 h-12 text-primary" />,
-      title: "Schedule Your Training",
-      description: "Plan your workouts and track your progress with our easy-to-use calendar. Create custom workout plans that fit your schedule.",
-      details: [
-        "Create personalized workout plans",
-        "Set training frequency",
-        "Track your progress over time",
-        "Get reminders for your workouts"
-      ]
-    },
-    {
-      icon: <User className="w-12 h-12 text-primary" />,
-      title: "Personal Profile",
-      description: "Customize your profile and set your fitness goals. Track your progress and stay motivated on your fitness journey.",
-      details: [
-        "Set personal fitness goals",
-        "Track body measurements",
-        "Log your achievements",
-        "Update your progress photos"
-      ]
-    },
-  ];
+  const { user } = useAuth();
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background to-muted">
-      <div className="container px-4 py-8 mx-auto">
-        <div className="text-center space-y-4 animate-fade-in">
-          <h1 className="text-4xl font-bold tracking-tight sm:text-6xl">
-            Welcome to Your Fitness Journey
-          </h1>
-          <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-            Whether you're new to working out or an experienced athlete, we're here to help you achieve your fitness goals.
-          </p>
-          <Button
-            size="lg"
-            className="mt-8"
-            onClick={() => navigate("/dashboard")}
-          >
-            Get Started <ArrowRight className="ml-2" />
-          </Button>
-        </div>
-
-        <div className="mt-16 grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
-          {features.map((feature, index) => (
-            <Card
-              key={index}
-              className="p-6 hover:shadow-lg transition-shadow animate-fade-in"
-              style={{ animationDelay: `${index * 200}ms` }}
+    <div className="min-h-screen flex flex-col">
+      {/* Hero Section */}
+      <header className="bg-gradient-to-r from-primary/10 to-accent/10 py-6">
+        <div className="container mx-auto px-4 flex justify-between items-center">
+          <div className="flex items-center gap-2">
+            <Dumbbell className="h-6 w-6 text-primary" />
+            <span className="text-xl font-bold text-primary">ScheduliFit</span>
+          </div>
+          
+          {user ? (
+            <Button 
+              variant="outline" 
+              onClick={() => navigate('/dashboard')}
             >
-              <div className="flex flex-col items-center text-center space-y-4">
-                {feature.icon}
-                <h3 className="text-xl font-semibold">{feature.title}</h3>
-                <p className="text-muted-foreground">{feature.description}</p>
-                <ul className="text-left w-full space-y-2">
-                  {feature.details.map((detail, idx) => (
-                    <li key={idx} className="flex items-center gap-2">
-                      <ArrowRight className="w-4 h-4 text-primary" />
-                      <span className="text-sm">{detail}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </Card>
-          ))}
+              My Dashboard <ChevronRight className="ml-2 h-4 w-4" />
+            </Button>
+          ) : (
+            <div className="flex gap-2">
+              <Button 
+                variant="outline" 
+                onClick={() => navigate('/auth', { state: { tab: 'login' } })}
+              >
+                <LogIn className="mr-2 h-4 w-4" />
+                Login
+              </Button>
+              <Button 
+                onClick={() => navigate('/auth', { state: { tab: 'signup' } })}
+              >
+                <UserPlus className="mr-2 h-4 w-4" />
+                Sign Up
+              </Button>
+            </div>
+          )}
         </div>
+      </header>
 
-        <div className="mt-16 space-y-8 animate-fade-in">
-          <h2 className="text-3xl font-bold text-center">How to Get Started</h2>
-          <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
-            <div className="space-y-4">
-              <div className="text-4xl font-bold text-primary">1</div>
-              <h3 className="text-xl font-semibold">Create Your Profile</h3>
-              <p className="text-muted-foreground">
-                Start by setting up your profile with your fitness goals and preferences. Add your measurements and upload a profile picture to track your progress.
-              </p>
+      <main className="flex-1">
+        {/* Hero Banner */}
+        <section className="py-20 bg-gradient-to-r from-primary to-accent text-white">
+          <div className="container mx-auto px-4 text-center">
+            <h1 className="text-4xl md:text-5xl font-bold mb-6">
+              Your Personalized Fitness Journey
+            </h1>
+            <p className="text-xl max-w-2xl mx-auto mb-8">
+              Track workouts, set goals, and achieve your fitness dreams with ScheduliFit.
+              Perfect for volleyball players and fitness enthusiasts.
+            </p>
+            {user ? (
+              <Button
+                size="lg"
+                variant="secondary"
+                onClick={() => navigate('/dashboard')}
+                className="animate-pulse bg-white text-primary hover:bg-white/90"
+              >
+                Go to Dashboard <ChevronRight className="ml-2 h-5 w-5" />
+              </Button>
+            ) : (
+              <Button
+                size="lg"
+                variant="secondary"
+                onClick={() => navigate('/auth', { state: { tab: 'signup' } })}
+                className="animate-pulse bg-white text-primary hover:bg-white/90"
+              >
+                Get Started <ChevronRight className="ml-2 h-5 w-5" />
+              </Button>
+            )}
+          </div>
+        </section>
+
+        {/* Features Section */}
+        <section className="py-16 bg-white">
+          <div className="container mx-auto px-4">
+            <h2 className="text-3xl font-bold text-center mb-12">Why Choose ScheduliFit?</h2>
+            <div className="grid md:grid-cols-3 gap-8">
+              {/* Feature 1 */}
+              <div className="bg-gray-50 rounded-lg p-6 shadow-sm">
+                <div className="bg-primary/10 p-3 rounded-full w-fit mb-4">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                  </svg>
+                </div>
+                <h3 className="text-xl font-semibold mb-2">Personalized Workouts</h3>
+                <p className="text-gray-600">Customized workout plans designed specifically for volleyball players and fitness enthusiasts.</p>
+              </div>
+
+              {/* Feature 2 */}
+              <div className="bg-gray-50 rounded-lg p-6 shadow-sm">
+                <div className="bg-primary/10 p-3 rounded-full w-fit mb-4">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                  </svg>
+                </div>
+                <h3 className="text-xl font-semibold mb-2">Track Your Progress</h3>
+                <p className="text-gray-600">Monitor your improvement with detailed statistics and achievement milestones.</p>
+              </div>
+
+              {/* Feature 3 */}
+              <div className="bg-gray-50 rounded-lg p-6 shadow-sm">
+                <div className="bg-primary/10 p-3 rounded-full w-fit mb-4">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <h3 className="text-xl font-semibold mb-2">Convenient Scheduling</h3>
+                <p className="text-gray-600">Plan your workouts ahead of time and receive reminders to stay on track.</p>
+              </div>
             </div>
-            <div className="space-y-4">
-              <div className="text-4xl font-bold text-primary">2</div>
-              <h3 className="text-xl font-semibold">Explore Workouts</h3>
-              <p className="text-muted-foreground">
-                Browse our exercise library to find workouts that match your goals. Each exercise comes with detailed instructions and video demonstrations.
-              </p>
+          </div>
+        </section>
+
+        {/* Call to Action */}
+        <section className="py-16 bg-gray-50">
+          <div className="container mx-auto px-4 text-center">
+            <h2 className="text-3xl font-bold mb-6">Ready to Transform Your Fitness Journey?</h2>
+            <p className="text-xl max-w-2xl mx-auto mb-8">
+              Join thousands of satisfied users who have achieved their fitness goals with ScheduliFit.
+            </p>
+            {user ? (
+              <Button 
+                onClick={() => navigate('/dashboard')}
+                className="bg-gradient-to-r from-primary to-accent hover:opacity-90"
+              >
+                Go to Dashboard <ChevronRight className="ml-2 h-4 w-4" />
+              </Button>
+            ) : (
+              <Button 
+                onClick={() => navigate('/auth', { state: { tab: 'signup' } })}
+                className="bg-gradient-to-r from-primary to-accent hover:opacity-90"
+              >
+                Sign Up Now <ChevronRight className="ml-2 h-4 w-4" />
+              </Button>
+            )}
+          </div>
+        </section>
+      </main>
+
+      {/* Footer */}
+      <footer className="bg-gray-900 text-white py-8">
+        <div className="container mx-auto px-4">
+          <div className="flex flex-col md:flex-row justify-between items-center">
+            <div className="flex items-center gap-2 mb-4 md:mb-0">
+              <Dumbbell className="h-5 w-5" />
+              <span className="text-lg font-bold">ScheduliFit</span>
             </div>
-            <div className="space-y-4">
-              <div className="text-4xl font-bold text-primary">3</div>
-              <h3 className="text-xl font-semibold">Plan Your Schedule</h3>
-              <p className="text-muted-foreground">
-                Use our calendar to create your personalized workout plan. Set reminders and track your progress as you complete each workout.
-              </p>
+            <div className="text-sm text-gray-400">
+              © {new Date().getFullYear()} ScheduliFit. All rights reserved.
             </div>
           </div>
         </div>
-
-        <div className="mt-16 text-center">
-          <Button
-            size="lg"
-            className="animate-bounce hover:animate-none"
-            onClick={() => navigate("/dashboard")}
-          >
-            Begin Your Journey <ArrowRight className="ml-2" />
-          </Button>
-        </div>
-      </div>
+      </footer>
     </div>
   );
 };
