@@ -1,7 +1,7 @@
 
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Dumbbell, Loader2 } from "lucide-react";
+import { Dumbbell, Loader2, CheckCircle } from "lucide-react";
 import { Exercise } from "@/types/exercise";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useQuery } from "@tanstack/react-query";
@@ -123,16 +123,18 @@ export const ExerciseLibrary = ({
                       Target: {exercise.muscleGroup}
                     </p>
                   )}
-                  {exercise.videoUrl && (
-                    <a 
-                      href={exercise.videoUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-xs text-primary hover:underline"
-                    >
-                      Watch Tutorial
-                    </a>
-                  )}
+                  <div className="flex justify-between items-center">
+                    {exercise.videoUrl && (
+                      <a 
+                        href={exercise.videoUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-xs text-primary hover:underline"
+                      >
+                        Watch Tutorial
+                      </a>
+                    )}
+                  </div>
                 </div>
               </Card>
             ))}

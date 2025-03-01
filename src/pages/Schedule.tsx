@@ -8,6 +8,8 @@ import { WeeklySchedule } from "@/components/schedule/WeeklySchedule";
 import { ExerciseLibrary } from "@/components/schedule/ExerciseLibrary";
 import { WorkoutCreationDialog } from "@/components/schedule/WorkoutCreationDialog";
 import { CustomWorkoutsList } from "@/components/schedule/CustomWorkoutsList";
+import { WorkoutCompletionDialog } from "@/components/schedule/WorkoutCompletionDialog";
+import { WorkoutStatistics } from "@/components/schedule/WorkoutStatistics";
 import { useToast } from "@/hooks/use-toast";
 import { exercises } from "@/lib/exercises";
 
@@ -190,7 +192,7 @@ const Schedule = () => {
       performance
     };
 
-    setWorkoutLogs(prev => [...prev, newLog]);
+    setWorkoutLogs(prev => [newLog, ...prev]);
     
     // Update achievements
     const newAchievements = [...achievements];
@@ -206,20 +208,34 @@ const Schedule = () => {
     }
 
     // Check for streak achievement
-    const recentLogs = workoutLogs
-      .filter(log => log.completed)
-      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-      .slice(0, 3);
+    const recentLogs = [newLog, ...workoutLogs.filter(log => log.completed)]
+      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
-    if (recentLogs.length === 2 && !newAchievements[1].unlocked) {
-      newAchievements[1].progress++;
-      if (newAchievements[1].progress >= newAchievements[1].target) {
-        newAchievements[1].unlocked = true;
-        toast({
-          title: "Achievement Unlocked! 🔥",
-          description: "You've maintained a 3-day workout streak!",
-        });
+    // Calculate streak
+    let streak = 1;
+    for (let i = 0; i < recentLogs.length - 1; i++) {
+      const currentDate = new Date(recentLogs[i].date);
+      const prevDate = new Date(recentLogs[i + 1].date);
+      
+      const diffDays = Math.floor((currentDate.getTime() - prevDate.getTime()) / (1000 * 60 * 60 * 24));
+      
+      if (diffDays === 1) {
+        streak++;
+      } else {
+        break;
       }
+    }
+
+    // Update streak achievement
+    if (streak >= 3 && !newAchievements[1].unlocked) {
+      newAchievements[1].progress = streak;
+      newAchievements[1].unlocked = true;
+      toast({
+        title: "Achievement Unlocked! 🔥",
+        description: "You've maintained a 3-day workout streak!",
+      });
+    } else if (streak > newAchievements[1].progress) {
+      newAchievements[1].progress = streak;
     }
 
     // Volleyball master achievement
@@ -280,7 +296,12 @@ const Schedule = () => {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      <WorkoutStatistics
+        workoutLogs={workoutLogs}
+        achievements={achievements}
+      />
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-8">
         <WeeklySchedule days={days} />
 
         <div className="space-y-6">
@@ -297,6 +318,16 @@ const Schedule = () => {
             </div>
             
             <Card className="p-4">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="font-medium">Select Date & Log Workout</h3>
+                {date && selectedType && (
+                  <WorkoutCompletionDialog
+                    date={date}
+                    workoutType={selectedType}
+                    onComplete={completeWorkout}
+                  />
+                )}
+              </div>
               <Calendar
                 mode="single"
                 selected={date}
