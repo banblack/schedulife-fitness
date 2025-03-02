@@ -7,7 +7,8 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/contexts/AuthContext';
-import { LogIn, UserPlus, ArrowLeft } from 'lucide-react';
+import { LogIn, UserPlus, ArrowLeft, Shield } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
 
 const Auth = () => {
   const navigate = useNavigate();
@@ -22,6 +23,7 @@ const Auth = () => {
     email: '',
     password: '',
     confirmPassword: '',
+    isAdmin: false,
   });
   
   const [errors, setErrors] = useState({
@@ -32,12 +34,21 @@ const Auth = () => {
   });
   
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showAdminOption, setShowAdminOption] = useState(false);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
     // Clear error when user types
     setErrors(prev => ({ ...prev, [name]: '' }));
+  };
+
+  const handleCheckboxChange = (checked: boolean) => {
+    setFormData(prev => ({ ...prev, isAdmin: checked }));
+  };
+
+  const toggleAdminOption = () => {
+    setShowAdminOption(!showAdminOption);
   };
 
   const validateForm = () => {
@@ -101,12 +112,12 @@ const Auth = () => {
     if (!validateForm()) return;
     
     setIsSubmitting(true);
-    const { error } = await signUp(formData.email, formData.password, formData.name);
+    const { error } = await signUp(formData.email, formData.password, formData.name, formData.isAdmin);
     
     if (!error) {
       // On success, switch to login tab
       setActiveTab('login');
-      setFormData(prev => ({ ...prev, password: '', confirmPassword: '' }));
+      setFormData(prev => ({ ...prev, password: '', confirmPassword: '', isAdmin: false }));
     }
     
     setIsSubmitting(false);
@@ -243,6 +254,33 @@ const Auth = () => {
                     />
                     {errors.confirmPassword && <p className="text-red-500 text-sm">{errors.confirmPassword}</p>}
                   </div>
+
+                  {!showAdminOption && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="w-full text-xs"
+                      onClick={toggleAdminOption}
+                    >
+                      <Shield className="mr-2 h-3 w-3" />
+                      I need admin access
+                    </Button>
+                  )}
+
+                  {showAdminOption && (
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        id="admin"
+                        checked={formData.isAdmin}
+                        onCheckedChange={handleCheckboxChange}
+                      />
+                      <Label htmlFor="admin" className="text-sm flex items-center">
+                        <Shield className="mr-2 h-3 w-3 text-amber-500" />
+                        Register as admin
+                      </Label>
+                    </div>
+                  )}
                 </CardContent>
                 
                 <CardFooter>

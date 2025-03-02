@@ -7,7 +7,7 @@ import { useToast } from '@/components/ui/use-toast';
 type AuthContextType = {
   user: User | null;
   session: Session | null;
-  signUp: (email: string, password: string, name: string) => Promise<{ error: any }>;
+  signUp: (email: string, password: string, name: string, isAdmin?: boolean) => Promise<{ error: any }>;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
   loading: boolean;
@@ -41,7 +41,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return () => subscription.unsubscribe();
   }, []);
 
-  const signUp = async (email: string, password: string, name: string) => {
+  const signUp = async (
+    email: string, 
+    password: string, 
+    name: string, 
+    isAdmin: boolean = false
+  ) => {
     try {
       const { data, error } = await supabase.auth.signUp({
         email,
@@ -63,12 +68,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           id: data.user.id,
           email,
           full_name: name,
+          is_admin: isAdmin,
           created_at: new Date().toISOString(),
         });
 
         toast({
           title: "Account created",
-          description: "Please check your email to verify your account",
+          description: isAdmin 
+            ? "Admin account created. Please sign in." 
+            : "Please check your email to verify your account",
         });
       }
 
