@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,6 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/contexts/AuthContext';
 import { LogIn, UserPlus, ArrowLeft, Shield } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
+import { AlertCircle } from 'lucide-react';
 
 const Auth = () => {
   const navigate = useNavigate();
@@ -24,6 +25,7 @@ const Auth = () => {
     password: '',
     confirmPassword: '',
     isAdmin: false,
+    adminSecretKey: '',
   });
   
   const [errors, setErrors] = useState({
@@ -31,10 +33,14 @@ const Auth = () => {
     email: '',
     password: '',
     confirmPassword: '',
+    adminSecretKey: '',
   });
   
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showAdminOption, setShowAdminOption] = useState(false);
+  
+  // Admin secret key for basic protection
+  const ADMIN_SECRET_KEY = "fittrack_admin_2023";
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -45,6 +51,10 @@ const Auth = () => {
 
   const handleCheckboxChange = (checked: boolean) => {
     setFormData(prev => ({ ...prev, isAdmin: checked }));
+    // If unchecked, clear the admin secret key error
+    if (!checked) {
+      setErrors(prev => ({ ...prev, adminSecretKey: '' }));
+    }
   };
 
   const toggleAdminOption = () => {
@@ -87,6 +97,12 @@ const Auth = () => {
         newErrors.confirmPassword = 'Passwords do not match';
         valid = false;
       }
+      
+      // Admin secret key validation
+      if (formData.isAdmin && formData.adminSecretKey !== ADMIN_SECRET_KEY) {
+        newErrors.adminSecretKey = 'Invalid admin secret key';
+        valid = false;
+      }
     }
     
     setErrors(newErrors);
@@ -117,7 +133,7 @@ const Auth = () => {
     if (!error) {
       // On success, switch to login tab
       setActiveTab('login');
-      setFormData(prev => ({ ...prev, password: '', confirmPassword: '', isAdmin: false }));
+      setFormData(prev => ({ ...prev, password: '', confirmPassword: '', isAdmin: false, adminSecretKey: '' }));
     }
     
     setIsSubmitting(false);
@@ -212,7 +228,10 @@ const Auth = () => {
                       onChange={handleChange}
                       className={errors.name ? "border-red-500" : ""}
                     />
-                    {errors.name && <p className="text-red-500 text-sm">{errors.name}</p>}
+                    {errors.name && <p className="text-sm text-red-500 flex items-center gap-1">
+                      <AlertCircle className="w-4 h-4" />
+                      {errors.name}
+                    </p>}
                   </div>
                   
                   <div className="space-y-2">
@@ -226,7 +245,10 @@ const Auth = () => {
                       onChange={handleChange}
                       className={errors.email ? "border-red-500" : ""}
                     />
-                    {errors.email && <p className="text-red-500 text-sm">{errors.email}</p>}
+                    {errors.email && <p className="text-sm text-red-500 flex items-center gap-1">
+                      <AlertCircle className="w-4 h-4" />
+                      {errors.email}
+                    </p>}
                   </div>
                   
                   <div className="space-y-2">
@@ -239,7 +261,10 @@ const Auth = () => {
                       onChange={handleChange}
                       className={errors.password ? "border-red-500" : ""}
                     />
-                    {errors.password && <p className="text-red-500 text-sm">{errors.password}</p>}
+                    {errors.password && <p className="text-sm text-red-500 flex items-center gap-1">
+                      <AlertCircle className="w-4 h-4" />
+                      {errors.password}
+                    </p>}
                   </div>
                   
                   <div className="space-y-2">
@@ -252,7 +277,10 @@ const Auth = () => {
                       onChange={handleChange}
                       className={errors.confirmPassword ? "border-red-500" : ""}
                     />
-                    {errors.confirmPassword && <p className="text-red-500 text-sm">{errors.confirmPassword}</p>}
+                    {errors.confirmPassword && <p className="text-sm text-red-500 flex items-center gap-1">
+                      <AlertCircle className="w-4 h-4" />
+                      {errors.confirmPassword}
+                    </p>}
                   </div>
 
                   {!showAdminOption && (
@@ -269,16 +297,39 @@ const Auth = () => {
                   )}
 
                   {showAdminOption && (
-                    <div className="flex items-center space-x-2">
-                      <Checkbox
-                        id="admin"
-                        checked={formData.isAdmin}
-                        onCheckedChange={handleCheckboxChange}
-                      />
-                      <Label htmlFor="admin" className="text-sm flex items-center">
-                        <Shield className="mr-2 h-3 w-3 text-amber-500" />
-                        Register as admin
-                      </Label>
+                    <div className="space-y-4 p-3 border border-amber-200 bg-amber-50 rounded-md">
+                      <div className="flex items-center space-x-2">
+                        <Checkbox
+                          id="admin"
+                          checked={formData.isAdmin}
+                          onCheckedChange={handleCheckboxChange}
+                        />
+                        <Label htmlFor="admin" className="text-sm flex items-center">
+                          <Shield className="mr-2 h-3 w-3 text-amber-500" />
+                          Register as admin
+                        </Label>
+                      </div>
+                      
+                      {formData.isAdmin && (
+                        <div className="space-y-2">
+                          <Label htmlFor="adminSecretKey" className="text-sm">Admin Secret Key</Label>
+                          <Input
+                            id="adminSecretKey"
+                            name="adminSecretKey"
+                            type="password"
+                            placeholder="Enter admin secret key"
+                            value={formData.adminSecretKey}
+                            onChange={handleChange}
+                            className={errors.adminSecretKey ? "border-red-500" : ""}
+                          />
+                          {errors.adminSecretKey && (
+                            <p className="text-sm text-red-500 flex items-center gap-1">
+                              <AlertCircle className="w-4 h-4" />
+                              {errors.adminSecretKey}
+                            </p>
+                          )}
+                        </div>
+                      )}
                     </div>
                   )}
                 </CardContent>

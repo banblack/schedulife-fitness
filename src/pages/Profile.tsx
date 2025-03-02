@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import { User, Save } from "lucide-react";
 import { useState, useEffect } from "react";
@@ -95,14 +94,6 @@ const Profile = () => {
 
     if (!profile.name.trim()) {
       newErrors.name = "Name is required";
-      isValid = false;
-    }
-
-    if (!profile.email.trim()) {
-      newErrors.email = "Email is required";
-      isValid = false;
-    } else if (!validateEmail(profile.email)) {
-      newErrors.email = "Invalid email format";
       isValid = false;
     }
 

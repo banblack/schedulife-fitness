@@ -40,23 +40,20 @@ export const PersonalInfo = ({ name, email, errors, onChange }: PersonalInfoProp
         </div>
         <div className="space-y-2">
           <label htmlFor="email" className="text-sm font-medium text-gray-700">
-            Email *
+            Email
           </label>
           <Input
             id="email"
             name="email"
             type="email"
             value={email}
-            onChange={onChange}
-            placeholder="Enter your email"
-            className={`${errors.email ? "border-red-500" : "focus:ring-primary/30"}`}
+            readOnly
+            disabled
+            className="bg-gray-100 cursor-not-allowed"
           />
-          {errors.email && (
-            <p className="text-sm text-red-500 flex items-center gap-1">
-              <AlertCircle className="w-4 h-4" />
-              {errors.email}
-            </p>
-          )}
+          <p className="text-xs text-gray-500 italic">
+            Email cannot be changed as it's linked to your account
+          </p>
         </div>
       </div>
     </div>
