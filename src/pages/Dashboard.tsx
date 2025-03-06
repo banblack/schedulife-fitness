@@ -1,5 +1,5 @@
 import { Card } from "@/components/ui/card";
-import { Activity, Weight, Medal, Trophy, Flame, Calendar, DumbellIcon, Dumbbell, TrendingUp, ArrowUpRight, User, Book } from "lucide-react";
+import { Activity, Weight, Medal, Trophy, Flame, Calendar, Dumbbell, TrendingUp, ArrowUpRight, User, Book, Clock } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
@@ -90,7 +90,7 @@ const Dashboard = () => {
         setStats({
           totalWorkouts: logs.length,
           streak: calculateStreak(logs),
-          lastWorkout: lastWorkoutDate,
+          lastWorkout: lastWorkoutDate ? lastWorkoutDate.toString() : null,
           favoriteWorkout
         });
       } catch (error) {
@@ -103,7 +103,6 @@ const Dashboard = () => {
     fetchUserData();
   }, [user?.id]);
   
-  // Calculate streak from workout logs
   const calculateStreak = (logs: any[]): number => {
     if (logs.length === 0) return 0;
     
@@ -152,7 +151,7 @@ const Dashboard = () => {
   };
   
   return (
-    <div className="container px-4 py-8 animate-fade-in">
+    <div className="container px-4 py-8 animate-fade-in bg-gray-50 min-h-screen">
       <div className="flex flex-col md:flex-row md:items-center justify-between mb-6">
         <h1 className="text-3xl font-bold text-gray-900">Your Fitness Dashboard</h1>
         {stats.lastWorkout && (
