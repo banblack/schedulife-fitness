@@ -14,6 +14,7 @@ import News from "./pages/News";
 import Profile from "./pages/Profile";
 import Subscriptions from "./pages/Subscriptions";
 import VolleyballWorkouts from "./pages/VolleyballWorkouts";
+import Milestones from "./pages/Milestones";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 
@@ -72,6 +73,11 @@ const AppRoutes = () => {
               <Route path="/profile" element={
                 <ProtectedRoute>
                   <Profile />
+                </ProtectedRoute>
+              } />
+              <Route path="/milestones" element={
+                <ProtectedRoute>
+                  <Milestones />
                 </ProtectedRoute>
               } />
               <Route path="/subscriptions" element={

@@ -296,6 +296,39 @@ export type Database = {
           },
         ]
       }
+      user_workout_stats: {
+        Row: {
+          created_at: string | null
+          id: string
+          last_workout_date: string | null
+          streak_days: number | null
+          total_workout_minutes: number | null
+          updated_at: string | null
+          user_id: string
+          workouts_completed: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          last_workout_date?: string | null
+          streak_days?: number | null
+          total_workout_minutes?: number | null
+          updated_at?: string | null
+          user_id: string
+          workouts_completed?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          last_workout_date?: string | null
+          streak_days?: number | null
+          total_workout_minutes?: number | null
+          updated_at?: string | null
+          user_id?: string
+          workouts_completed?: number | null
+        }
+        Relationships: []
+      }
       users: {
         Row: {
           avatar_url: string | null
