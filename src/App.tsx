@@ -13,6 +13,7 @@ import Schedule from "./pages/Schedule";
 import News from "./pages/News";
 import Profile from "./pages/Profile";
 import Subscriptions from "./pages/Subscriptions";
+import VolleyballWorkouts from "./pages/VolleyballWorkouts";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 
@@ -56,6 +57,11 @@ const AppRoutes = () => {
               <Route path="/schedule" element={
                 <ProtectedRoute>
                   <Schedule />
+                </ProtectedRoute>
+              } />
+              <Route path="/volleyball-workouts" element={
+                <ProtectedRoute>
+                  <VolleyballWorkouts />
                 </ProtectedRoute>
               } />
               <Route path="/news" element={
