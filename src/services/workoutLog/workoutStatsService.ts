@@ -1,4 +1,3 @@
-
 import { workoutLogCore } from "./workoutLogCore";
 
 export const workoutStatsService = {
@@ -10,6 +9,9 @@ export const workoutStatsService = {
     totalDuration: number;
     thisMonthWorkouts: number;
     lastMonthWorkouts: number;
+    workoutsByType: Record<string, number>;
+    averageDuration: number;
+    averageIntensity: number;
   }> {
     try {
       const logs = await workoutLogCore.getUserWorkoutLogs();
@@ -17,6 +19,9 @@ export const workoutStatsService = {
       // Calculate statistics
       const totalWorkouts = logs.length;
       const totalDuration = logs.reduce((sum, log) => sum + log.duration, 0);
+      const totalIntensity = logs.reduce((sum, log) => sum + log.intensity, 0);
+      const averageDuration = totalWorkouts > 0 ? Math.round(totalDuration / totalWorkouts) : 0;
+      const averageIntensity = totalWorkouts > 0 ? Math.round(totalIntensity / totalWorkouts * 10) / 10 : 0;
       
       // Current month workouts
       const now = new Date();
@@ -40,6 +45,13 @@ export const workoutStatsService = {
         return logDate.getMonth() === lastMonth && logDate.getFullYear() === lastMonthYear;
       }).length;
       
+      // Group workouts by type
+      const workoutsByType = logs.reduce((acc: Record<string, number>, log) => {
+        const workoutName = log.workoutName || 'Unknown';
+        acc[workoutName] = (acc[workoutName] || 0) + 1;
+        return acc;
+      }, {});
+      
       // Calculate streaks
       const { currentStreak, longestStreak } = this.calculateWorkoutStreaks(logs);
       
@@ -49,7 +61,10 @@ export const workoutStatsService = {
         longestStreak,
         totalDuration,
         thisMonthWorkouts,
-        lastMonthWorkouts
+        lastMonthWorkouts,
+        workoutsByType,
+        averageDuration,
+        averageIntensity
       };
     } catch (error) {
       console.error("Error calculating workout statistics:", error);
@@ -59,7 +74,10 @@ export const workoutStatsService = {
         longestStreak: 0,
         totalDuration: 0,
         thisMonthWorkouts: 0,
-        lastMonthWorkouts: 0
+        lastMonthWorkouts: 0,
+        workoutsByType: {},
+        averageDuration: 0,
+        averageIntensity: 0
       };
     }
   },
@@ -135,5 +153,143 @@ export const workoutStatsService = {
     }
     
     return { currentStreak, longestStreak };
+  },
+
+  // Get volleyball-specific workout statistics
+  async getVolleyballWorkoutStats(): Promise<{
+    totalVolleyballWorkouts: number;
+    lastVolleyballWorkout: string | null;
+    volleyballWorkoutsTrend: number;
+  }> {
+    try {
+      const logs = await workoutLogCore.getUserWorkoutLogs();
+      
+      // Filter volleyball workouts
+      const volleyballWorkouts = logs.filter(log => 
+        log.workoutName?.toLowerCase().includes('volleyball') ||
+        log.notes?.toLowerCase().includes('volleyball')
+      );
+      
+      const totalVolleyballWorkouts = volleyballWorkouts.length;
+      
+      // Get last volleyball workout date
+      const lastVolleyballWorkout = totalVolleyballWorkouts > 0 
+        ? new Date(volleyballWorkouts[0].date).toISOString()
+        : null;
+      
+      // Calculate trend - compare this month vs last month
+      const now = new Date();
+      const thisMonth = now.getMonth();
+      const thisYear = now.getFullYear();
+      
+      const thisMonthVolleyball = volleyballWorkouts.filter(log => {
+        const logDate = new Date(log.date);
+        return logDate.getMonth() === thisMonth && logDate.getFullYear() === thisYear;
+      }).length;
+      
+      let lastMonth = thisMonth - 1;
+      let lastMonthYear = thisYear;
+      if (lastMonth < 0) {
+        lastMonth = 11;
+        lastMonthYear--;
+      }
+      
+      const lastMonthVolleyball = volleyballWorkouts.filter(log => {
+        const logDate = new Date(log.date);
+        return logDate.getMonth() === lastMonth && logDate.getFullYear() === lastMonthYear;
+      }).length;
+      
+      const volleyballWorkoutsTrend = lastMonthVolleyball > 0 
+        ? Math.round((thisMonthVolleyball - lastMonthVolleyball) / lastMonthVolleyball * 100) 
+        : thisMonthVolleyball > 0 ? 100 : 0;
+      
+      return {
+        totalVolleyballWorkouts,
+        lastVolleyballWorkout,
+        volleyballWorkoutsTrend
+      };
+    } catch (error) {
+      console.error("Error calculating volleyball workout stats:", error);
+      return {
+        totalVolleyballWorkouts: 0,
+        lastVolleyballWorkout: null,
+        volleyballWorkoutsTrend: 0
+      };
+    }
+  },
+
+  // Check if user has achieved specific milestones
+  async checkAchievements(): Promise<{
+    achievements: Array<{
+      id: string;
+      name: string;
+      description: string;
+      achieved: boolean;
+      progress: number;
+      maxProgress: number;
+    }>
+  }> {
+    try {
+      const logs = await workoutLogCore.getUserWorkoutLogs();
+      const stats = await this.getWorkoutStatistics();
+      const volleyballStats = await this.getVolleyballWorkoutStats();
+      
+      // Define achievements
+      const achievements = [
+        {
+          id: 'first-workout',
+          name: 'First Step',
+          description: 'Complete your first workout',
+          achieved: logs.length > 0,
+          progress: Math.min(logs.length, 1),
+          maxProgress: 1
+        },
+        {
+          id: 'consistency-streak',
+          name: 'Consistency King',
+          description: 'Work out 5 days in a row',
+          achieved: stats.currentStreak >= 5,
+          progress: Math.min(stats.currentStreak, 5),
+          maxProgress: 5
+        },
+        {
+          id: 'volleyball-enthusiast',
+          name: 'Volleyball Pro',
+          description: 'Complete 10 volleyball-specific workouts',
+          achieved: volleyballStats.totalVolleyballWorkouts >= 10,
+          progress: Math.min(volleyballStats.totalVolleyballWorkouts, 10),
+          maxProgress: 10
+        },
+        {
+          id: 'workout-explorer',
+          name: 'Workout Explorer',
+          description: 'Try 5 different types of workouts',
+          achieved: Object.keys(stats.workoutsByType).length >= 5,
+          progress: Math.min(Object.keys(stats.workoutsByType).length, 5),
+          maxProgress: 5
+        },
+        {
+          id: 'dedication',
+          name: 'Dedication',
+          description: 'Log 30 workouts total',
+          achieved: stats.totalWorkouts >= 30,
+          progress: Math.min(stats.totalWorkouts, 30),
+          maxProgress: 30
+        },
+        {
+          id: 'intensity-master',
+          name: 'Intensity Master',
+          description: 'Complete a workout with intensity 10',
+          achieved: logs.some(log => log.intensity === 10),
+          progress: logs.some(log => log.intensity === 10) ? 1 : 0,
+          maxProgress: 1
+        }
+      ];
+      
+      return { achievements };
+    } catch (error) {
+      console.error("Error checking achievements:", error);
+      return { achievements: [] };
+    }
   }
 };

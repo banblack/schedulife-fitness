@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { CalendarCheck, Award, Flame, TrendingUp, Clock, Loader2 } from "lucide-react";
 import { workoutLogService } from "@/services/workoutLog";
@@ -10,7 +11,17 @@ export function WorkoutStatistics() {
     totalDuration: 0,
     thisMonthWorkouts: 0,
     lastMonthWorkouts: 0,
+    averageDuration: 0,
+    averageIntensity: 0
   });
+  const [achievements, setAchievements] = useState<Array<{
+    id: string;
+    name: string;
+    description: string;
+    achieved: boolean;
+    progress: number;
+    maxProgress: number;
+  }>>([]);
   const [loading, setLoading] = useState(true);
   
   useEffect(() => {
@@ -19,6 +30,10 @@ export function WorkoutStatistics() {
       try {
         const workoutStats = await workoutLogService.getWorkoutStatistics();
         setStats(workoutStats);
+        
+        // Fetch achievements
+        const achievementsData = await workoutLogService.checkAchievements();
+        setAchievements(achievementsData.achievements);
       } catch (error) {
         console.error("Error fetching workout statistics:", error);
       } finally {
@@ -43,12 +58,6 @@ export function WorkoutStatistics() {
     : stats.thisMonthWorkouts > 0 ? 100 : 0;
   
   const monthTrend = stats.thisMonthWorkouts - stats.lastMonthWorkouts;
-  
-  // Calculate achievement progress
-  const firstStepProgress = stats.totalWorkouts > 0 ? 100 : 0;
-  const consistencyKingProgress = Math.min(stats.currentStreak / 5 * 100, 100);
-  const volleyballProProgress = Math.min(stats.totalWorkouts / 10 * 100, 100);
-  const dedicationProgress = Math.min(stats.totalWorkouts / 30 * 100, 100);
   
   return (
     <div className="space-y-6">
@@ -81,7 +90,7 @@ export function WorkoutStatistics() {
           <p className="text-2xl font-bold">
             {Math.floor(stats.totalDuration / 60)} hours {stats.totalDuration % 60} min
           </p>
-          <p className="text-xs text-muted-foreground mt-1">Lifetime</p>
+          <p className="text-xs text-muted-foreground mt-1">Avg: {stats.averageDuration} min/workout</p>
         </div>
         
         <div className="bg-primary/5 p-4 rounded-lg border border-primary/10">
@@ -100,30 +109,15 @@ export function WorkoutStatistics() {
           Achievements
         </h3>
         <div className="space-y-3">
-          <AchievementItem 
-            name="First Step" 
-            description="Complete your first workout"
-            progress={firstStepProgress}
-            unlocked={firstStepProgress >= 100}
-          />
-          <AchievementItem 
-            name="Consistency King" 
-            description="Work out 5 days in a row"
-            progress={consistencyKingProgress}
-            unlocked={consistencyKingProgress >= 100}
-          />
-          <AchievementItem 
-            name="Volleyball Pro" 
-            description="Complete 10 volleyball-specific workouts"
-            progress={volleyballProProgress}
-            unlocked={volleyballProProgress >= 100}
-          />
-          <AchievementItem 
-            name="Dedication" 
-            description="Log 30 workouts total"
-            progress={dedicationProgress}
-            unlocked={dedicationProgress >= 100}
-          />
+          {achievements.map(achievement => (
+            <AchievementItem 
+              key={achievement.id}
+              name={achievement.name} 
+              description={achievement.description}
+              progress={(achievement.progress / achievement.maxProgress) * 100}
+              unlocked={achievement.achieved}
+            />
+          ))}
         </div>
       </div>
     </div>
