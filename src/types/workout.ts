@@ -7,6 +7,7 @@ export interface WorkoutLog {
   date: Date;
   duration: number;
   intensity: number;
+  performance?: number;
   notes: string;
   created_at?: string;
 }
@@ -14,5 +15,6 @@ export interface WorkoutLog {
 export interface WorkoutLogFormData {
   duration: number;
   intensity: number;
+  performance: number;
   notes: string;
 }

@@ -1,7 +1,7 @@
 
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Clock, Flame, Save } from "lucide-react";
+import { Clock, Flame, Save, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Slider } from "@/components/ui/slider";
@@ -22,6 +22,7 @@ export function CompletionForm({ onSubmit, isSubmitting, onCancel }: CompletionF
     defaultValues: {
       duration: 30,
       intensity: 5,
+      performance: 3,
       notes: "",
     },
   });
@@ -86,6 +87,38 @@ export function CompletionForm({ onSubmit, isSubmitting, onCancel }: CompletionF
               </FormControl>
               <FormDescription>
                 How challenging was this workout for you?
+              </FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        
+        <FormField
+          control={form.control}
+          name="performance"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel className="flex items-center gap-2">
+                <Star className="h-4 w-4" /> Performance (1-5)
+              </FormLabel>
+              <FormControl>
+                <div className="space-y-4">
+                  <Slider
+                    value={[field.value]}
+                    min={1}
+                    max={5}
+                    step={1}
+                    onValueChange={(vals) => field.onChange(vals[0])}
+                  />
+                  <div className="flex justify-between text-xs text-muted-foreground">
+                    <span>Needs Work</span>
+                    <span>Average</span>
+                    <span>Excellent</span>
+                  </div>
+                </div>
+              </FormControl>
+              <FormDescription>
+                How would you rate your performance today?
               </FormDescription>
               <FormMessage />
             </FormItem>

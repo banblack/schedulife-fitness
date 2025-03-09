@@ -29,6 +29,7 @@ export function WorkoutCompletionDialog({
   const { toast } = useToast();
   const [showSuccess, setShowSuccess] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [completedWorkoutData, setCompletedWorkoutData] = useState<WorkoutLogFormData | null>(null);
 
   const handleSubmit = async (data: WorkoutLogFormData) => {
     if (!workoutId) return;
@@ -44,12 +45,16 @@ export function WorkoutCompletionDialog({
       );
       
       if (result) {
+        // Store the completed data for use in the success state
+        setCompletedWorkoutData(data);
+        
         // Show success message
         setShowSuccess(true);
         
-        // Reset form after 2 seconds and close dialog
+        // Reset form after 5 seconds and close dialog
         setTimeout(() => {
           setShowSuccess(false);
+          setCompletedWorkoutData(null);
           onOpenChange(false);
           
           toast({
@@ -57,7 +62,7 @@ export function WorkoutCompletionDialog({
             description: `You've logged ${data.duration} minutes of ${workoutName}. Great job!`,
             duration: 5000,
           });
-        }, 2000);
+        }, 5000);
       } else {
         toast({
           title: "Error",
@@ -81,8 +86,20 @@ export function WorkoutCompletionDialog({
     onOpenChange(false);
   };
 
+  const handleOpenChange = (isOpen: boolean) => {
+    if (!isOpen && !showSuccess) {
+      // Only allow closing if not showing success state
+      onOpenChange(false);
+    } else if (!isOpen && showSuccess) {
+      // For success state, don't allow dismissal until the timer expires
+      return;
+    } else {
+      onOpenChange(isOpen);
+    }
+  };
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-[500px]">
         {!showSuccess ? (
           <>
@@ -100,7 +117,7 @@ export function WorkoutCompletionDialog({
             />
           </>
         ) : (
-          <SuccessState />
+          completedWorkoutData && <SuccessState workoutData={completedWorkoutData} />
         )}
       </DialogContent>
     </Dialog>
