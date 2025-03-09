@@ -1,10 +1,9 @@
-
 import { useState, useEffect } from "react";
 import { Bar, BarChart, CartesianGrid, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { BarChart2, Calendar, Loader2 } from "lucide-react";
-import { workoutLogService } from "@/services/workoutLogService";
+import { workoutLogService } from "@/services/workoutLog";
 import { WorkoutLog } from "@/types/workout";
 
 export function ProgressChart() {

@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
-import { workoutLogService } from "@/services/workoutLogService";
+import { workoutLogService } from "@/services/workoutLog";
 
 export interface UserStats {
   totalWorkouts: number;

@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -19,7 +18,7 @@ import { Input } from "@/components/ui/input";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Clock, Flame, Medal, Save, ThumbsUp } from "lucide-react";
 import { WorkoutLogFormData } from "@/types/workout";
-import { workoutLogService } from "@/services/workoutLogService";
+import { workoutLogService } from "@/services/workoutLog";
 
 interface WorkoutCompletionDialogProps {
   open: boolean;

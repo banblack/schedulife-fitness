@@ -1,7 +1,6 @@
-
 import { useState, useEffect } from "react";
 import { CalendarCheck, Award, Flame, TrendingUp, Clock, Loader2 } from "lucide-react";
-import { workoutLogService } from "@/services/workoutLogService";
+import { workoutLogService } from "@/services/workoutLog";
 
 export function WorkoutStatistics() {
   const [stats, setStats] = useState({

@@ -19,7 +19,7 @@ import {
   Loader2
 } from "lucide-react";
 import { formatDistance } from "date-fns";
-import { workoutLogService } from "@/services/workoutLogService";
+import { workoutLogService } from "@/services/workoutLog";
 import { WorkoutLog } from "@/types/workout";
 
 export function WorkoutHistory() {
