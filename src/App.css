@@ -1,42 +1,61 @@
+
 #root {
-  max-width: 1280px;
+  width: 100%;
   margin: 0 auto;
-  padding: 2rem;
-  text-align: center;
 }
 
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
-}
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.react:hover {
-  filter: drop-shadow(0 0 2em #61dafbaa);
+.hero-gradient {
+  background: linear-gradient(135deg, #FF6056 0%, #4DA1A9 100%);
 }
 
-@keyframes logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+.card-hover {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  a:nth-of-type(2) .logo {
-    animation: logo-spin infinite 20s linear;
-  }
+.card-hover:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.05);
 }
 
-.card {
-  padding: 2em;
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 1rem;
 }
 
-.read-the-docs {
-  color: #888;
+.section-title {
+  position: relative;
+  padding-bottom: 0.5rem;
+  margin-bottom: 1.5rem;
+  font-weight: 600;
+}
+
+.section-title::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 50px;
+  height: 3px;
+  background: linear-gradient(90deg, #FF6056, #4DA1A9);
+  border-radius: 3px;
+}
+
+/* Fitness Blender inspired workout card */
+.workout-card {
+  overflow: hidden;
+  position: relative;
+  border-radius: 0.75rem;
+}
+
+.workout-card img {
+  transition: transform 0.4s ease;
+}
+
+.workout-card:hover img {
+  transform: scale(1.05);
+}
+
+.workout-card .overlay {
+  background: linear-gradient(0deg, rgba(45, 49, 66, 0.8) 0%, rgba(45, 49, 66, 0) 100%);
 }

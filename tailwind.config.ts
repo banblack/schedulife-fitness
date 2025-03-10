@@ -19,6 +19,9 @@ export default {
       },
     },
     extend: {
+      fontFamily: {
+        sans: ['Inter', 'system-ui', 'sans-serif'],
+      },
       colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
@@ -26,20 +29,29 @@ export default {
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
         primary: {
-          DEFAULT: "#9b87f5",
+          DEFAULT: "#FF6056", // Vibrant red from stndrd app
+          light: "#FF8C8C",
           foreground: "#FFFFFF",
         },
         secondary: {
-          DEFAULT: "#D6BCFA",
-          foreground: "#1A1F2C",
+          DEFAULT: "#2D3142", // Deep navy from fitness blender
+          foreground: "#FFFFFF",
         },
         accent: {
-          DEFAULT: "#8B5CF6",
+          DEFAULT: "#4DA1A9", // Teal color from stndrd app
           foreground: "#FFFFFF",
         },
         neutral: {
           DEFAULT: "#8E9196",
           foreground: "#FFFFFF",
+        },
+        muted: {
+          DEFAULT: "#F5F5F7", // Light gray background
+          foreground: "#64748b",
+        },
+        card: {
+          DEFAULT: "#FFFFFF",
+          foreground: "#2D3142",
         },
       },
       keyframes: {
@@ -55,6 +67,10 @@ export default {
       animation: {
         "slide-up": "slide-up 0.3s ease-out",
         "fade-in": "fade-in 0.4s ease-out",
+      },
+      borderRadius: {
+        "xl": "1rem",
+        "2xl": "1.5rem",
       },
     },
   },

@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { Award, Calendar, Flame, Medal, ThumbsUp, TrendingUp } from "lucide-react";
 import { workoutLogService } from "@/services/workoutLog";
 import { WorkoutLogFormData } from "@/types/workout";
+import confetti from "canvas-confetti";
 
 interface SuccessStateProps {
   workoutData: WorkoutLogFormData;
@@ -14,6 +15,13 @@ export function SuccessState({ workoutData }: SuccessStateProps) {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    // Trigger confetti effect when component mounts
+    confetti({
+      particleCount: 100,
+      spread: 70,
+      origin: { y: 0.6 }
+    });
+
     const fetchStats = async () => {
       try {
         // Get workout statistics using the correct method
@@ -44,49 +52,61 @@ export function SuccessState({ workoutData }: SuccessStateProps) {
 
   return (
     <div className="py-8 flex flex-col items-center justify-center space-y-6">
-      <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center text-green-600">
-        <ThumbsUp className="h-8 w-8" />
+      <div className="w-20 h-20 rounded-full bg-gradient-to-r from-primary to-accent flex items-center justify-center text-white">
+        <ThumbsUp className="h-10 w-10" />
       </div>
       
-      <h2 className="text-xl font-semibold text-center">Workout Completed!</h2>
+      <h2 className="text-2xl font-bold text-center gradient-text">
+        Workout Completed!
+      </h2>
       
       <p className="text-center text-muted-foreground">
         {getPerformanceMessage()} Your workout has been logged successfully.
       </p>
       
       {!isLoading && (
-        <div className="w-full space-y-4">
+        <div className="w-full space-y-5">
           {/* Workout Stats */}
-          <div className="flex flex-col gap-2 p-4 bg-muted/50 rounded-lg">
+          <div className="flex flex-col gap-3 p-5 bg-white rounded-xl shadow-sm">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Calendar className="h-4 w-4 text-primary" />
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center">
+                  <Calendar className="h-5 w-5 text-primary" />
+                </div>
                 <span className="text-sm font-medium">Current Streak</span>
               </div>
-              <span className="font-bold">{streak} days</span>
+              <span className="text-lg font-bold">{streak} days</span>
             </div>
             
+            <div className="h-px bg-gray-100 w-full"></div>
+            
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <TrendingUp className="h-4 w-4 text-primary" />
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center">
+                  <TrendingUp className="h-5 w-5 text-accent" />
+                </div>
                 <span className="text-sm font-medium">Total Workouts</span>
               </div>
-              <span className="font-bold">{totalWorkouts}</span>
+              <span className="text-lg font-bold">{totalWorkouts}</span>
             </div>
             
+            <div className="h-px bg-gray-100 w-full"></div>
+            
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Flame className="h-4 w-4 text-orange-500" />
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center">
+                  <Flame className="h-5 w-5 text-primary" />
+                </div>
                 <span className="text-sm font-medium">Workout Intensity</span>
               </div>
-              <span className="font-bold">{workoutData.intensity}/10</span>
+              <span className="text-lg font-bold">{workoutData.intensity}/10</span>
             </div>
           </div>
           
           {/* Achievement/Milestone Badge */}
           {isMilestone && (
-            <div className="flex items-center justify-center gap-2 p-3 bg-yellow-100 text-yellow-800 rounded-lg">
-              <Award className="h-5 w-5 text-yellow-600" />
+            <div className="flex items-center justify-center gap-3 p-4 bg-gradient-to-r from-primary/10 to-accent/10 text-secondary rounded-xl border border-primary/20">
+              <Award className="h-6 w-6 text-primary" />
               <span className="text-sm font-semibold">
                 Milestone achieved: {totalWorkouts} workouts completed!
               </span>
@@ -94,9 +114,9 @@ export function SuccessState({ workoutData }: SuccessStateProps) {
           )}
           
           {streak >= 3 && (
-            <div className="flex items-center justify-center gap-2 mt-2">
-              <Medal className="h-5 w-5 text-primary" />
-              <span className="text-sm">
+            <div className="flex items-center justify-center gap-3 mt-3 p-3 bg-secondary/5 rounded-xl">
+              <Medal className="h-5 w-5 text-accent" />
+              <span className="text-sm font-medium">
                 {streak} day streak! Keep going!
               </span>
             </div>
