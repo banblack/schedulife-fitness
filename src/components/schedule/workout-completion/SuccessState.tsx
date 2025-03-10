@@ -16,7 +16,8 @@ export function SuccessState({ workoutData }: SuccessStateProps) {
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const stats = await workoutLogService.getUserWorkoutStats();
+        // Get workout statistics using the correct method
+        const stats = await workoutLogService.getWorkoutStatistics();
         setStreak(stats.currentStreak || 0);
         setTotalWorkouts(stats.totalWorkouts || 0);
       } catch (error) {
