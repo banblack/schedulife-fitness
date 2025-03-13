@@ -5,6 +5,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { ThemeProvider } from "@/hooks/useTheme";
 import { useAuth } from "@/contexts/AuthContext";
 import Navbar from "./components/Navbar";
 import Landing from "./pages/Landing";
@@ -97,15 +98,17 @@ const AppRoutes = () => {
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
-      <AuthProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <div className="min-h-screen pb-16 sm:pb-0 sm:pt-16 bg-gray-50">
-            <AppRoutes />
-          </div>
-        </BrowserRouter>
-      </AuthProvider>
+      <ThemeProvider>
+        <AuthProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <div className="min-h-screen pb-16 sm:pb-0 sm:pt-16 bg-muted dark:bg-muted-dark transition-colors duration-300">
+              <AppRoutes />
+            </div>
+          </BrowserRouter>
+        </AuthProvider>
+      </ThemeProvider>
     </TooltipProvider>
   </QueryClientProvider>
 );

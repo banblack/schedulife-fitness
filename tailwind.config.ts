@@ -31,27 +31,38 @@ export default {
         primary: {
           DEFAULT: "#FF6056", // Vibrant red from stndrd app
           light: "#FF8C8C",
+          dark: "#D14045",
           foreground: "#FFFFFF",
         },
         secondary: {
           DEFAULT: "#2D3142", // Deep navy from fitness blender
+          dark: "#1A1F2C",
+          light: "#454C66",
           foreground: "#FFFFFF",
         },
         accent: {
           DEFAULT: "#4DA1A9", // Teal color from stndrd app
+          dark: "#3A7A80",
+          light: "#67BDC4",
           foreground: "#FFFFFF",
         },
         neutral: {
           DEFAULT: "#8E9196",
+          dark: "#6B6E74",
+          light: "#ADB0B6",
           foreground: "#FFFFFF",
         },
         muted: {
           DEFAULT: "#F5F5F7", // Light gray background
+          dark: "#252836", // Dark mode background
           foreground: "#64748b",
+          "dark-foreground": "#A1A1AA",
         },
         card: {
           DEFAULT: "#FFFFFF",
+          dark: "#1E1F2B",
           foreground: "#2D3142",
+          "dark-foreground": "#E5E5E6",
         },
       },
       keyframes: {

@@ -25,20 +25,20 @@
   }
 
   .dark {
-    --background: 222.2 84% 4.9%;
+    --background: 240 10% 13%;
     --foreground: 210 40% 98%;
 
-    --card: 222.2 84% 4.9%;
+    --card: 240 10% 16%;
     --card-foreground: 210 40% 98%;
 
-    --popover: 222.2 84% 4.9%;
+    --popover: 240 10% 16%;
     --popover-foreground: 210 40% 98%;
 
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
+    --muted: 240 10% 20%;
+    --muted-foreground: 215 20.2% 75.1%;
 
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
+    --border: 240 10% 25%;
+    --input: 240 10% 25%;
     --ring: 212.7 26.8% 83.9%;
   }
 }
@@ -49,13 +49,13 @@
   }
 
   body {
-    @apply bg-muted text-foreground font-sans;
+    @apply bg-muted text-foreground font-sans transition-colors duration-300;
   }
 }
 
 @layer components {
   .fitness-card {
-    @apply bg-white rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow duration-300;
+    @apply bg-card dark:bg-card-dark rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm hover:shadow-md transition-shadow duration-300;
   }
   
   .gradient-text {
@@ -73,4 +73,95 @@
   .accent-button {
     @apply bg-accent text-white hover:bg-accent/90 rounded-xl font-medium;
   }
+
+  .dark-card {
+    @apply bg-card-dark text-card-dark-foreground border-gray-700 backdrop-blur-sm;
+  }
+  
+  .dark-glass {
+    @apply bg-black/20 backdrop-blur-lg border border-white/10;
+  }
+}
+
+@layer utilities {
+  .dark-gradient {
+    background: linear-gradient(to bottom right, #1E1F2B, #252836);
+  }
+}
+
+#root {
+  width: 100%;
+  margin: 0 auto;
+}
+
+.hero-gradient {
+  background: linear-gradient(135deg, #FF6056 0%, #4DA1A9 100%);
+}
+
+.dark .hero-gradient {
+  background: linear-gradient(135deg, #D14045 0%, #3A7A80 100%);
+}
+
+.card-hover {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card-hover:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.05);
+}
+
+.dark .card-hover:hover {
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 1rem;
+}
+
+.section-title {
+  position: relative;
+  padding-bottom: 0.5rem;
+  margin-bottom: 1.5rem;
+  font-weight: 600;
+}
+
+.section-title::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 50px;
+  height: 3px;
+  background: linear-gradient(90deg, #FF6056, #4DA1A9);
+  border-radius: 3px;
+}
+
+.dark .section-title::after {
+  background: linear-gradient(90deg, #D14045, #3A7A80);
+}
+
+/* Fitness Blender inspired workout card */
+.workout-card {
+  overflow: hidden;
+  position: relative;
+  border-radius: 0.75rem;
+}
+
+.workout-card img {
+  transition: transform 0.4s ease;
+}
+
+.workout-card:hover img {
+  transform: scale(1.05);
+}
+
+.workout-card .overlay {
+  background: linear-gradient(0deg, rgba(45, 49, 66, 0.8) 0%, rgba(45, 49, 66, 0) 100%);
+}
+
+.dark .workout-card .overlay {
+  background: linear-gradient(0deg, rgba(20, 22, 30, 0.9) 0%, rgba(20, 22, 30, 0.2) 100%);
 }

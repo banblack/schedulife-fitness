@@ -12,7 +12,8 @@ export const processWeeklyData = (logs: WorkoutLog[]) => {
   const result = days.map((day, index) => ({
     name: day,
     workouts: 0,
-    duration: 0
+    duration: 0,
+    intensity: 0
   }));
   
   // Get the date 7 days ago
@@ -33,6 +34,14 @@ export const processWeeklyData = (logs: WorkoutLog[]) => {
     
     result[dayIndex].workouts += 1;
     result[dayIndex].duration += log.duration;
+    
+    // Calculate intensity on scale of 1-10
+    if (log.intensity) {
+      result[dayIndex].intensity = Math.max(result[dayIndex].intensity, log.intensity);
+    } else if (log.difficulty) {
+      // Convert difficulty to intensity if it exists
+      result[dayIndex].intensity = Math.max(result[dayIndex].intensity, log.difficulty);
+    }
   });
   
   return result;
@@ -57,11 +66,11 @@ export const processMonthlyData = (logs: WorkoutLog[]) => {
   
   // Group logs by week of month
   const weekData = [
-    { name: 'Week 1', workouts: 0, duration: 0 },
-    { name: 'Week 2', workouts: 0, duration: 0 },
-    { name: 'Week 3', workouts: 0, duration: 0 },
-    { name: 'Week 4', workouts: 0, duration: 0 },
-    { name: 'Week 5', workouts: 0, duration: 0 },
+    { name: 'Week 1', workouts: 0, duration: 0, intensity: 0, logCount: 0 },
+    { name: 'Week 2', workouts: 0, duration: 0, intensity: 0, logCount: 0 },
+    { name: 'Week 3', workouts: 0, duration: 0, intensity: 0, logCount: 0 },
+    { name: 'Week 4', workouts: 0, duration: 0, intensity: 0, logCount: 0 },
+    { name: 'Week 5', workouts: 0, duration: 0, intensity: 0, logCount: 0 },
   ];
   
   monthLogs.forEach(log => {
@@ -78,6 +87,23 @@ export const processMonthlyData = (logs: WorkoutLog[]) => {
     
     weekData[weekIndex].workouts += 1;
     weekData[weekIndex].duration += log.duration;
+    weekData[weekIndex].logCount += 1;
+    
+    // Sum intensity for averaging later
+    if (log.intensity) {
+      weekData[weekIndex].intensity += log.intensity;
+    } else if (log.difficulty) {
+      weekData[weekIndex].intensity += log.difficulty;
+    }
+  });
+  
+  // Calculate averages
+  weekData.forEach(week => {
+    if (week.logCount > 0) {
+      week.duration = Math.round(week.duration / week.logCount);
+      week.intensity = Math.round(week.intensity / week.logCount);
+    }
+    delete week.logCount;
   });
   
   // Remove unused weeks (e.g., if current date is in week 3, we don't show weeks 4-5)
@@ -90,4 +116,58 @@ export const processMonthlyData = (logs: WorkoutLog[]) => {
   else currentWeekIndex = 4;
   
   return weekData.slice(0, currentWeekIndex + 1);
+};
+
+/**
+ * Process workout logs to create yearly chart data
+ */
+export const processYearlyData = (logs: WorkoutLog[]) => {
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const today = new Date();
+  const currentYear = today.getFullYear();
+  
+  // Initialize data for the last 12 months
+  const result = months.map((month, index) => ({
+    name: month,
+    workouts: 0,
+    duration: 0,
+    intensity: 0,
+    logCount: 0
+  }));
+  
+  // Filter logs from the current year
+  const yearLogs = logs.filter(log => {
+    const logDate = new Date(log.date);
+    return logDate.getFullYear() === currentYear;
+  });
+  
+  // Group logs by month
+  yearLogs.forEach(log => {
+    const logDate = new Date(log.date);
+    const monthIndex = logDate.getMonth();
+    
+    result[monthIndex].workouts += 1;
+    result[monthIndex].duration += log.duration;
+    result[monthIndex].logCount += 1;
+    
+    // Sum intensity for averaging later
+    if (log.intensity) {
+      result[monthIndex].intensity += log.intensity;
+    } else if (log.difficulty) {
+      result[monthIndex].intensity += log.difficulty;
+    }
+  });
+  
+  // Calculate averages
+  result.forEach(month => {
+    if (month.logCount > 0) {
+      month.duration = Math.round(month.duration / month.logCount);
+      month.intensity = Math.round(month.intensity / month.logCount);
+    }
+    delete month.logCount;
+  });
+  
+  // Get only months up to the current month
+  const currentMonth = today.getMonth();
+  return result.slice(0, currentMonth + 1);
 };
