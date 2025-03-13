@@ -8,7 +8,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Check, LucideIcon } from "lucide-react";
+import { Check, Shield, Star, Zap } from "lucide-react";
 import React from "react";
 
 export interface PlanData {
@@ -18,7 +18,7 @@ export interface PlanData {
   yearlyPrice: number;
   features: string[];
   popular: boolean;
-  icon: React.ReactNode;
+  icon: string;
   trialDays: number;
   color: string;
 }
@@ -30,6 +30,20 @@ interface PlanCardProps {
 }
 
 const PlanCard = ({ plan, billingInterval, onStartTrial }: PlanCardProps) => {
+  // Function to render the appropriate icon based on the string identifier
+  const renderIcon = (iconName: string) => {
+    switch (iconName) {
+      case "Shield":
+        return <Shield className="w-5 h-5" />;
+      case "Star":
+        return <Star className="w-5 h-5" />;
+      case "Zap":
+        return <Zap className="w-5 h-5" />;
+      default:
+        return <Shield className="w-5 h-5" />;
+    }
+  };
+
   return (
     <Card 
       className={`relative overflow-hidden transition-all hover:shadow-lg ${plan.color} ${
@@ -47,7 +61,7 @@ const PlanCard = ({ plan, billingInterval, onStartTrial }: PlanCardProps) => {
       <CardHeader>
         <div className="flex items-center gap-2 mb-3">
           <div className="p-2 rounded-full bg-white text-primary">
-            {plan.icon}
+            {renderIcon(plan.icon)}
           </div>
           <CardTitle className="text-lg">{plan.name}</CardTitle>
         </div>

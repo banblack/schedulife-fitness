@@ -1,5 +1,4 @@
 
-import { Shield, Star, Zap } from "lucide-react";
 import { PlanData } from "./PlanCard";
 
 export const coachingPlans: PlanData[] = [
@@ -16,7 +15,7 @@ export const coachingPlans: PlanData[] = [
       "Access to workout library"
     ],
     popular: false,
-    icon: <Shield className="w-5 h-5" />,
+    icon: "Shield",
     trialDays: 7,
     color: "bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200"
   },
@@ -35,7 +34,7 @@ export const coachingPlans: PlanData[] = [
       "Custom meal plans"
     ],
     popular: true,
-    icon: <Star className="w-5 h-5" />,
+    icon: "Star",
     trialDays: 14,
     color: "bg-gradient-to-br from-primary/5 to-primary/10 border-primary/20"
   },
@@ -56,7 +55,7 @@ export const coachingPlans: PlanData[] = [
       "Sport-specific training"
     ],
     popular: false,
-    icon: <Zap className="w-5 h-5" />,
+    icon: "Zap",
     trialDays: 14,
     color: "bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200"
   }
