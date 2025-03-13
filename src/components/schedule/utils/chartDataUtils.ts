@@ -38,6 +38,9 @@ export const processWeeklyData = (logs: WorkoutLog[]) => {
     // Calculate intensity on scale of 1-10
     if (log.intensity) {
       result[dayIndex].intensity = Math.max(result[dayIndex].intensity, log.intensity);
+    } else if (log.difficulty) {
+      // Convert difficulty to intensity if it exists
+      result[dayIndex].intensity = Math.max(result[dayIndex].intensity, log.difficulty);
     }
   });
   
@@ -89,6 +92,8 @@ export const processMonthlyData = (logs: WorkoutLog[]) => {
     // Sum intensity for averaging later
     if (log.intensity) {
       weekData[weekIndex].intensity += log.intensity;
+    } else if (log.difficulty) {
+      weekData[weekIndex].intensity += log.difficulty;
     }
   });
   
@@ -148,6 +153,8 @@ export const processYearlyData = (logs: WorkoutLog[]) => {
     // Sum intensity for averaging later
     if (log.intensity) {
       result[monthIndex].intensity += log.intensity;
+    } else if (log.difficulty) {
+      result[monthIndex].intensity += log.difficulty;
     }
   });
   
