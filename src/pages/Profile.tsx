@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import { User, Save } from "lucide-react";
 import { useState, useEffect } from "react";
@@ -9,6 +10,7 @@ import { ProfileAvatar } from "@/components/profile/ProfileAvatar";
 import { PersonalInfo } from "@/components/profile/PersonalInfo";
 import { PhysicalInfo } from "@/components/profile/PhysicalInfo";
 import { BioAndGoals } from "@/components/profile/BioAndGoals";
+import { SetupProgress } from "@/components/profile/SetupProgress";
 
 const Profile = () => {
   const { toast } = useToast();
@@ -185,6 +187,8 @@ const Profile = () => {
         <User className="w-8 h-8 text-primary" />
         <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent">My Profile</h1>
       </div>
+
+      <SetupProgress />
 
       <div className="space-y-8">
         <ProfileAvatar 
