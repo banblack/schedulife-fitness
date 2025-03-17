@@ -2,7 +2,6 @@
 import type { Config } from "tailwindcss";
 
 export default {
-  darkMode: ["class"],
   content: [
     "./pages/**/*.{ts,tsx}",
     "./components/**/*.{ts,tsx}",
@@ -54,15 +53,11 @@ export default {
         },
         muted: {
           DEFAULT: "#F5F5F7", // Light gray background
-          dark: "#252836", // Dark mode background
           foreground: "#64748b",
-          "dark-foreground": "#A1A1AA",
         },
         card: {
           DEFAULT: "#FFFFFF",
-          dark: "#1E1F2B",
           foreground: "#2D3142",
-          "dark-foreground": "#E5E5E6",
         },
       },
       keyframes: {

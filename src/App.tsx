@@ -103,7 +103,7 @@ const App = () => (
           <Toaster />
           <Sonner />
           <BrowserRouter>
-            <div className="min-h-screen pb-16 sm:pb-0 sm:pt-16 bg-muted dark:bg-muted-dark transition-colors duration-300">
+            <div className="min-h-screen pb-16 sm:pb-0 sm:pt-16 bg-muted transition-colors duration-300">
               <AppRoutes />
             </div>
           </BrowserRouter>
