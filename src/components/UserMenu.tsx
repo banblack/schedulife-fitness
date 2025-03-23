@@ -2,7 +2,7 @@
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
-import { LogOut, User, Settings } from "lucide-react";
+import { LogOut, User, Settings, Award, Calendar, BarChart4 } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -13,10 +13,45 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { UserProfile } from "@/services/authService";
+import { useState, useEffect } from "react";
+import { supabase } from "@/lib/supabase";
+import { useToast } from "@/components/ui/use-toast";
 
 export function UserMenu() {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
+  const { toast } = useToast();
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+  const [isLoadingProfile, setIsLoadingProfile] = useState(true);
+  
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      if (!user) return;
+      
+      try {
+        const { data, error } = await supabase
+          .from('users')
+          .select('*')
+          .eq('id', user.id)
+          .single();
+          
+        if (error) throw error;
+        setUserProfile(data as UserProfile);
+      } catch (error) {
+        console.error('Error fetching user profile:', error);
+        toast({
+          title: "Error",
+          description: "Failed to load user profile data",
+          variant: "destructive",
+        });
+      } finally {
+        setIsLoadingProfile(false);
+      }
+    };
+    
+    fetchUserProfile();
+  }, [user, toast]);
   
   const getInitials = (name: string) => {
     return name
@@ -26,9 +61,10 @@ export function UserMenu() {
       .toUpperCase();
   };
   
-  const userInitials = user?.user_metadata?.full_name 
-    ? getInitials(user.user_metadata.full_name)
-    : 'U';
+  // Use profile data if available, fall back to user metadata
+  const displayName = userProfile?.full_name || user?.user_metadata?.full_name || 'User';
+  const userInitials = displayName ? getInitials(displayName) : 'U';
+  const avatarUrl = userProfile?.avatar_url || user?.user_metadata?.avatar_url;
   
   const handleSignOut = async () => {
     await signOut();
@@ -40,8 +76,8 @@ export function UserMenu() {
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" className="relative h-8 w-8 rounded-full">
           <Avatar className="h-8 w-8">
-            <AvatarImage src={user?.user_metadata?.avatar_url} alt={user?.user_metadata?.full_name || 'User'} />
-            <AvatarFallback>{userInitials}</AvatarFallback>
+            <AvatarImage src={avatarUrl} alt={displayName} />
+            <AvatarFallback>{isLoadingProfile ? '...' : userInitials}</AvatarFallback>
           </Avatar>
         </Button>
       </DropdownMenuTrigger>
@@ -49,7 +85,7 @@ export function UserMenu() {
         <DropdownMenuLabel className="font-normal">
           <div className="flex flex-col space-y-1">
             <p className="text-sm font-medium leading-none">
-              {user?.user_metadata?.full_name || 'User'}
+              {displayName}
             </p>
             <p className="text-xs leading-none text-muted-foreground">
               {user?.email}
@@ -63,8 +99,20 @@ export function UserMenu() {
             <span>Profile</span>
           </DropdownMenuItem>
           <DropdownMenuItem onClick={() => navigate('/dashboard')}>
-            <Settings className="mr-2 h-4 w-4" />
+            <BarChart4 className="mr-2 h-4 w-4" />
             <span>Dashboard</span>
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => navigate('/schedule')}>
+            <Calendar className="mr-2 h-4 w-4" />
+            <span>Workout Schedule</span>
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => navigate('/milestones')}>
+            <Award className="mr-2 h-4 w-4" />
+            <span>Milestones</span>
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => navigate('/subscriptions')}>
+            <Settings className="mr-2 h-4 w-4" />
+            <span>Subscription</span>
           </DropdownMenuItem>
         </DropdownMenuGroup>
         <DropdownMenuSeparator />

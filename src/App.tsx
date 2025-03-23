@@ -17,6 +17,7 @@ import Subscriptions from "./pages/Subscriptions";
 import VolleyballWorkouts from "./pages/VolleyballWorkouts";
 import Milestones from "./pages/Milestones";
 import Auth from "./pages/Auth";
+import PasswordReset from "./pages/PasswordReset";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -45,6 +46,7 @@ const AppRoutes = () => {
     <Routes>
       <Route path="/" element={<Landing />} />
       <Route path="/auth" element={user ? <Navigate to="/dashboard" /> : <Auth />} />
+      <Route path="/update-password" element={<PasswordReset />} />
       <Route
         path="/*"
         element={

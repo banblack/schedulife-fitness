@@ -7,6 +7,8 @@ import { Label } from '@/components/ui/label';
 import { CardContent, CardFooter } from '@/components/ui/card';
 import { LogIn } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
+import { resetPassword } from '@/services/authService';
+import { useToast } from '@/components/ui/use-toast';
 
 interface LoginFormProps {
   onTabChange: (tab: 'login' | 'signup') => void;
@@ -15,6 +17,7 @@ interface LoginFormProps {
 export const LoginForm = ({ onTabChange }: LoginFormProps) => {
   const navigate = useNavigate();
   const { signIn } = useAuth();
+  const { toast } = useToast();
   
   const [formData, setFormData] = useState({
     email: '',
@@ -27,6 +30,7 @@ export const LoginForm = ({ onTabChange }: LoginFormProps) => {
   });
   
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSendingReset, setIsSendingReset] = useState(false);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -59,6 +63,37 @@ export const LoginForm = ({ onTabChange }: LoginFormProps) => {
     
     setErrors(newErrors);
     return valid;
+  };
+
+  const handleForgotPassword = async () => {
+    if (!formData.email) {
+      setErrors(prev => ({ ...prev, email: 'Please enter your email to reset password' }));
+      return;
+    }
+    
+    if (!/\S+@\S+\.\S+/.test(formData.email)) {
+      setErrors(prev => ({ ...prev, email: 'Please enter a valid email' }));
+      return;
+    }
+    
+    setIsSendingReset(true);
+    
+    const { success, error } = await resetPassword(formData.email);
+    
+    if (success) {
+      toast({
+        title: "Password Reset Email Sent",
+        description: "Check your inbox for instructions to reset your password",
+      });
+    } else {
+      toast({
+        title: "Error",
+        description: error?.message || "Failed to send reset email. Please try again later.",
+        variant: "destructive",
+      });
+    }
+    
+    setIsSendingReset(false);
   };
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -95,9 +130,14 @@ export const LoginForm = ({ onTabChange }: LoginFormProps) => {
         <div className="space-y-2">
           <div className="flex justify-between">
             <Label htmlFor="login-password">Password</Label>
-            <a className="text-xs text-primary hover:underline">
-              Forgot password?
-            </a>
+            <button 
+              type="button"
+              onClick={handleForgotPassword}
+              className="text-xs text-primary hover:underline"
+              disabled={isSendingReset}
+            >
+              {isSendingReset ? 'Sending...' : 'Forgot password?'}
+            </button>
           </div>
           <Input
             id="login-password"
