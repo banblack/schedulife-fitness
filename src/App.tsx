@@ -16,6 +16,7 @@ import Profile from "./pages/Profile";
 import Subscriptions from "./pages/Subscriptions";
 import VolleyballWorkouts from "./pages/VolleyballWorkouts";
 import Milestones from "./pages/Milestones";
+import Admin from "./pages/Admin";
 import Auth from "./pages/Auth";
 import PasswordReset from "./pages/PasswordReset";
 import NotFound from "./pages/NotFound";
@@ -86,6 +87,11 @@ const AppRoutes = () => {
               <Route path="/subscriptions" element={
                 <ProtectedRoute>
                   <Subscriptions />
+                </ProtectedRoute>
+              } />
+              <Route path="/admin" element={
+                <ProtectedRoute>
+                  <Admin />
                 </ProtectedRoute>
               } />
               <Route path="*" element={<NotFound />} />

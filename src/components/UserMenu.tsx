@@ -2,7 +2,7 @@
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
-import { LogOut, User, Settings, Award, Calendar, BarChart4 } from "lucide-react";
+import { LogOut, User, Settings, Award, Calendar, BarChart4, Shield } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -114,6 +114,12 @@ export function UserMenu() {
             <Settings className="mr-2 h-4 w-4" />
             <span>Subscription</span>
           </DropdownMenuItem>
+          {userProfile?.is_admin && (
+            <DropdownMenuItem onClick={() => navigate('/admin')}>
+              <Shield className="mr-2 h-4 w-4" />
+              <span>Admin</span>
+            </DropdownMenuItem>
+          )}
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={handleSignOut} className="text-red-600">
