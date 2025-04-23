@@ -7,8 +7,24 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus, Save, Trash2 } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/lib/supabase";
+import { z } from "zod";
+
+// Define validation schema
+const exerciseSchema = z.object({
+  name: z.string().min(1, "El nombre del ejercicio es requerido"),
+  sets: z.number().min(1, "Mínimo 1 serie"),
+  reps: z.string().min(1, "Las repeticiones son requeridas"),
+  day_of_week: z.string().min(1, "El día es requerido")
+});
+
+const routineSchema = z.object({
+  name: z.string().min(1, "El nombre de la rutina es requerido"),
+  description: z.string().optional(),
+  exercises: z.array(exerciseSchema).min(1, "Agrega al menos un ejercicio")
+});
 
 interface RoutineFormDialogProps {
   open: boolean;
@@ -51,6 +67,25 @@ export function RoutineFormDialog({ open, onOpenChange, onSuccess, initialData }
   const [description, setDescription] = useState(initialData?.description || "");
   const [exercises, setExercises] = useState<Exercise[]>(initialData?.exercises || []);
   const [loading, setLoading] = useState(false);
+  const [errors, setErrors] = useState<{ [key: string]: string }>({});
+
+  const validateForm = () => {
+    try {
+      routineSchema.parse({ name, description, exercises });
+      setErrors({});
+      return true;
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        const newErrors: { [key: string]: string } = {};
+        error.errors.forEach((err) => {
+          const path = err.path.join('.');
+          newErrors[path] = err.message;
+        });
+        setErrors(newErrors);
+      }
+      return false;
+    }
+  };
 
   const handleAddExercise = () => {
     setExercises([
@@ -67,25 +102,24 @@ export function RoutineFormDialog({ open, onOpenChange, onSuccess, initialData }
     const updatedExercises = [...exercises];
     updatedExercises[index] = {
       ...updatedExercises[index],
-      [field]: value,
+      [field]: field === 'sets' ? parseInt(value.toString()) : value,
     };
     setExercises(updatedExercises);
+    
+    // Clear exercise-specific error when the user makes a change
+    const errorKey = `exercises.${index}.${field}`;
+    if (errors[errorKey]) {
+      const newErrors = { ...errors };
+      delete newErrors[errorKey];
+      setErrors(newErrors);
+    }
   };
 
   const handleSubmit = async () => {
-    if (!name.trim()) {
+    if (!validateForm()) {
       toast({
-        title: "Error",
-        description: "Por favor ingresa un nombre para la rutina",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (exercises.length === 0) {
-      toast({
-        title: "Error",
-        description: "Agrega al menos un ejercicio a la rutina",
+        title: "Error de validación",
+        description: "Por favor corrige los errores en el formulario",
         variant: "destructive",
       });
       return;
@@ -95,7 +129,6 @@ export function RoutineFormDialog({ open, onOpenChange, onSuccess, initialData }
 
     try {
       if (initialData?.id) {
-        // Update existing routine
         const { error: routineError } = await supabase
           .from("workout_routines")
           .update({ name, description })
@@ -103,7 +136,6 @@ export function RoutineFormDialog({ open, onOpenChange, onSuccess, initialData }
 
         if (routineError) throw routineError;
 
-        // Delete existing exercises
         const { error: deleteError } = await supabase
           .from("routine_exercises")
           .delete()
@@ -111,7 +143,6 @@ export function RoutineFormDialog({ open, onOpenChange, onSuccess, initialData }
 
         if (deleteError) throw deleteError;
 
-        // Insert new exercises
         const { error: exercisesError } = await supabase
           .from("routine_exercises")
           .insert(
@@ -124,7 +155,6 @@ export function RoutineFormDialog({ open, onOpenChange, onSuccess, initialData }
         if (exercisesError) throw exercisesError;
 
       } else {
-        // Create new routine
         const { data: routine, error: routineError } = await supabase
           .from("workout_routines")
           .insert({ name, description })
@@ -174,13 +204,26 @@ export function RoutineFormDialog({ open, onOpenChange, onSuccess, initialData }
 
         <div className="space-y-6">
           <div className="space-y-2">
-            <Label htmlFor="name">Nombre de la Rutina</Label>
+            <Label htmlFor="name" className={errors.name ? "text-destructive" : ""}>
+              Nombre de la Rutina
+            </Label>
             <Input
               id="name"
               value={name}
-              onChange={(e) => setName(e.target.value)}
+              onChange={(e) => {
+                setName(e.target.value);
+                if (errors.name) {
+                  const newErrors = { ...errors };
+                  delete newErrors.name;
+                  setErrors(newErrors);
+                }
+              }}
               placeholder="Ej: Rutina de Fuerza"
+              className={errors.name ? "border-destructive" : ""}
             />
+            {errors.name && (
+              <p className="text-sm text-destructive">{errors.name}</p>
+            )}
           </div>
 
           <div className="space-y-2">
@@ -202,18 +245,28 @@ export function RoutineFormDialog({ open, onOpenChange, onSuccess, initialData }
               </Button>
             </div>
 
+            {errors.exercises && exercises.length === 0 && (
+              <Alert variant="destructive">
+                <AlertDescription>{errors.exercises}</AlertDescription>
+              </Alert>
+            )}
+
             {exercises.map((exercise, index) => (
               <div key={index} className="space-y-4 p-4 border rounded-md">
                 <div className="flex justify-between items-start gap-4">
                   <div className="flex-1 space-y-2">
-                    <Label>Nombre del Ejercicio</Label>
+                    <Label className={errors[`exercises.${index}.name`] ? "text-destructive" : ""}>
+                      Nombre del Ejercicio
+                    </Label>
                     <Input
                       value={exercise.name}
-                      onChange={(e) =>
-                        handleExerciseChange(index, "name", e.target.value)
-                      }
+                      onChange={(e) => handleExerciseChange(index, "name", e.target.value)}
                       placeholder="Ej: Sentadillas"
+                      className={errors[`exercises.${index}.name`] ? "border-destructive" : ""}
                     />
+                    {errors[`exercises.${index}.name`] && (
+                      <p className="text-sm text-destructive">{errors[`exercises.${index}.name`]}</p>
+                    )}
                   </div>
                   <Button
                     variant="outline"
@@ -226,35 +279,43 @@ export function RoutineFormDialog({ open, onOpenChange, onSuccess, initialData }
 
                 <div className="grid grid-cols-3 gap-4">
                   <div className="space-y-2">
-                    <Label>Series</Label>
+                    <Label className={errors[`exercises.${index}.sets`] ? "text-destructive" : ""}>
+                      Series
+                    </Label>
                     <Input
                       type="number"
                       min={1}
                       value={exercise.sets}
-                      onChange={(e) =>
-                        handleExerciseChange(index, "sets", parseInt(e.target.value))
-                      }
+                      onChange={(e) => handleExerciseChange(index, "sets", parseInt(e.target.value))}
+                      className={errors[`exercises.${index}.sets`] ? "border-destructive" : ""}
                     />
+                    {errors[`exercises.${index}.sets`] && (
+                      <p className="text-sm text-destructive">{errors[`exercises.${index}.sets`]}</p>
+                    )}
                   </div>
                   <div className="space-y-2">
-                    <Label>Repeticiones</Label>
+                    <Label className={errors[`exercises.${index}.reps`] ? "text-destructive" : ""}>
+                      Repeticiones
+                    </Label>
                     <Input
                       value={exercise.reps}
-                      onChange={(e) =>
-                        handleExerciseChange(index, "reps", e.target.value)
-                      }
+                      onChange={(e) => handleExerciseChange(index, "reps", e.target.value)}
                       placeholder="Ej: 12 o 8-12"
+                      className={errors[`exercises.${index}.reps`] ? "border-destructive" : ""}
                     />
+                    {errors[`exercises.${index}.reps`] && (
+                      <p className="text-sm text-destructive">{errors[`exercises.${index}.reps`]}</p>
+                    )}
                   </div>
                   <div className="space-y-2">
-                    <Label>Día</Label>
+                    <Label className={errors[`exercises.${index}.day_of_week`] ? "text-destructive" : ""}>
+                      Día
+                    </Label>
                     <Select
                       value={exercise.day_of_week}
-                      onValueChange={(value) =>
-                        handleExerciseChange(index, "day_of_week", value)
-                      }
+                      onValueChange={(value) => handleExerciseChange(index, "day_of_week", value)}
                     >
-                      <SelectTrigger>
+                      <SelectTrigger className={errors[`exercises.${index}.day_of_week`] ? "border-destructive" : ""}>
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -265,6 +326,9 @@ export function RoutineFormDialog({ open, onOpenChange, onSuccess, initialData }
                         ))}
                       </SelectContent>
                     </Select>
+                    {errors[`exercises.${index}.day_of_week`] && (
+                      <p className="text-sm text-destructive">{errors[`exercises.${index}.day_of_week`]}</p>
+                    )}
                   </div>
                 </div>
               </div>
