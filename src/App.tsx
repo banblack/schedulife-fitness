@@ -103,22 +103,25 @@ const AppRoutes = () => {
   );
 };
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
+function App() {
+  return (
+    <QueryClientProvider client={queryClient}>
       <ThemeProvider>
         <AuthProvider>
-          <Toaster />
-          <Sonner />
+          {/* Mover TooltipProvider dentro de un componente funcional */}
           <BrowserRouter>
-            <div className="min-h-screen pb-16 sm:pb-0 sm:pt-16 bg-muted transition-colors duration-300">
-              <AppRoutes />
-            </div>
+            <TooltipProvider>
+              <Toaster />
+              <Sonner />
+              <div className="min-h-screen pb-16 sm:pb-0 sm:pt-16 bg-muted transition-colors duration-300">
+                <AppRoutes />
+              </div>
+            </TooltipProvider>
           </BrowserRouter>
         </AuthProvider>
       </ThemeProvider>
-    </TooltipProvider>
-  </QueryClientProvider>
-);
+    </QueryClientProvider>
+  );
+}
 
 export default App;
