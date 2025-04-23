@@ -1,12 +1,26 @@
-
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Dumbbell, UserPlus, LogIn, ChevronRight } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useToast } from "@/contexts/ToastContext";
 
 const Landing = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { toast } = useToast();
+
+  const handleDemoLogin = async () => {
+    const { success, error } = await signInAsDemo();
+    if (success) {
+      navigate('/dashboard');
+    } else {
+      toast({
+        title: "Error",
+        description: "No se pudo iniciar sesión como usuario demo",
+        variant: "destructive",
+      });
+    }
+  };
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -66,14 +80,24 @@ const Landing = () => {
                 Go to Dashboard <ChevronRight className="ml-2 h-5 w-5" />
               </Button>
             ) : (
-              <Button
-                size="lg"
-                variant="secondary"
-                onClick={() => navigate('/auth', { state: { tab: 'signup' } })}
-                className="animate-pulse bg-white text-primary hover:bg-white/90"
-              >
-                Get Started <ChevronRight className="ml-2 h-5 w-5" />
-              </Button>
+              <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                <Button
+                  size="lg"
+                  variant="secondary"
+                  onClick={() => navigate('/auth', { state: { tab: 'signup' } })}
+                  className="bg-white text-primary hover:bg-white/90"
+                >
+                  Get Started <ChevronRight className="ml-2 h-5 w-5" />
+                </Button>
+                <Button
+                  size="lg"
+                  variant="outline"
+                  onClick={handleDemoLogin}
+                  className="bg-white/10 text-white hover:bg-white/20 border-white"
+                >
+                  Try Demo Version
+                </Button>
+              </div>
             )}
           </div>
         </section>

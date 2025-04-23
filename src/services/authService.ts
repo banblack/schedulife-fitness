@@ -1,4 +1,3 @@
-
 import { supabase } from '@/lib/supabase';
 import { User } from '@supabase/supabase-js';
 
@@ -89,6 +88,26 @@ export const resetPassword = async (email: string): Promise<{ success: boolean; 
     return { success: true, error: null };
   } catch (error) {
     console.error('Error sending password reset email:', error);
+    return { success: false, error };
+  }
+};
+
+// Demo user credentials
+const DEMO_USER_ID = '12345678-1234-1234-1234-123456789012';
+const DEMO_USER_EMAIL = 'demo@schedulefit.com';
+const DEMO_USER_PASSWORD = 'demo123'; // This is just for the demo, normally we'd use environment variables
+
+export const signInAsDemo = async (): Promise<{ success: boolean; error: any }> => {
+  try {
+    const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+      email: DEMO_USER_EMAIL,
+      password: DEMO_USER_PASSWORD,
+    });
+
+    if (signInError) throw signInError;
+    return { success: true, error: null };
+  } catch (error) {
+    console.error('Error signing in as demo:', error);
     return { success: false, error };
   }
 };
