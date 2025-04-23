@@ -11,6 +11,7 @@ export interface UserProfile {
   height?: number;
   weight?: number;
   fitness_goals?: string;
+  is_admin?: boolean;
   created_at?: string;
   updated_at?: string;
 }

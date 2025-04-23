@@ -1,8 +1,12 @@
 
-import { WorkoutDashboard } from "@/components/dashboard/WorkoutDashboard";
+import { RoutinesList } from "@/components/dashboard/RoutinesList";
 
 const Dashboard = () => {
-  return <WorkoutDashboard />;
+  return (
+    <div className="container mx-auto p-6">
+      <RoutinesList />
+    </div>
+  );
 };
 
 export default Dashboard;
