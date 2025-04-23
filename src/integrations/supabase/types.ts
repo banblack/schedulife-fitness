@@ -162,6 +162,47 @@ export type Database = {
           },
         ]
       }
+      routine_exercises: {
+        Row: {
+          created_at: string | null
+          day_of_week: string
+          id: string
+          name: string
+          reps: string
+          routine_id: string | null
+          sets: number
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          day_of_week: string
+          id?: string
+          name: string
+          reps: string
+          routine_id?: string | null
+          sets: number
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          day_of_week?: string
+          id?: string
+          name?: string
+          reps?: string
+          routine_id?: string | null
+          sets?: number
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "routine_exercises_routine_id_fkey"
+            columns: ["routine_id"]
+            isOneToOne: false
+            referencedRelation: "workout_routines"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       sport_specific_workouts: {
         Row: {
           created_at: string | null
