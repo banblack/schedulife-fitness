@@ -162,6 +162,77 @@ export type Database = {
           },
         ]
       }
+      league_teams: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          id: string
+          league_id: string | null
+          name: string
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          league_id?: string | null
+          name: string
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          league_id?: string | null
+          name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "league_teams_league_id_fkey"
+            columns: ["league_id"]
+            isOneToOne: false
+            referencedRelation: "leagues"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      leagues: {
+        Row: {
+          created_at: string
+          created_by: string
+          description: string | null
+          end_date: string
+          id: string
+          is_public: boolean | null
+          logo_url: string | null
+          name: string
+          start_date: string
+          status: string | null
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          description?: string | null
+          end_date: string
+          id?: string
+          is_public?: boolean | null
+          logo_url?: string | null
+          name: string
+          start_date: string
+          status?: string | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          end_date?: string
+          id?: string
+          is_public?: boolean | null
+          logo_url?: string | null
+          name?: string
+          start_date?: string
+          status?: string | null
+        }
+        Relationships: []
+      }
       routine_exercises: {
         Row: {
           created_at: string | null

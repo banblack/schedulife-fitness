@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ThemeProvider } from "@/hooks/useTheme";
+import { ToastProvider } from "@/contexts/ToastContext";
 import { useAuth } from "@/contexts/AuthContext";
 import Navbar from "./components/Navbar";
 import Landing from "./pages/Landing";
@@ -108,16 +109,17 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
         <AuthProvider>
-          {/* Mover TooltipProvider dentro de un componente funcional */}
-          <BrowserRouter>
-            <TooltipProvider>
-              <Toaster />
-              <Sonner />
-              <div className="min-h-screen pb-16 sm:pb-0 sm:pt-16 bg-muted transition-colors duration-300">
-                <AppRoutes />
-              </div>
-            </TooltipProvider>
-          </BrowserRouter>
+          <ToastProvider>
+            <BrowserRouter>
+              <TooltipProvider>
+                <Toaster />
+                <Sonner />
+                <div className="min-h-screen pb-16 sm:pb-0 sm:pt-16 bg-muted transition-colors duration-300">
+                  <AppRoutes />
+                </div>
+              </TooltipProvider>
+            </BrowserRouter>
+          </ToastProvider>
         </AuthProvider>
       </ThemeProvider>
     </QueryClientProvider>

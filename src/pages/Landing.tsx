@@ -1,8 +1,10 @@
+
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Dumbbell, UserPlus, LogIn, ChevronRight } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
-import { useToast } from "@/contexts/ToastContext";
+import { useToast } from "@/hooks/use-toast";
+import { signInAsDemo } from "@/services/authService";
 
 const Landing = () => {
   const navigate = useNavigate();
