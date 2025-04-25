@@ -1,3 +1,4 @@
+
 export interface WorkoutLog {
   id: string;
   userId: string;
@@ -16,6 +17,14 @@ export interface WorkoutLogFormData {
   intensity: number;
   performance: number;
   notes: string;
+}
+
+export interface WorkoutRoutine {
+  id: string;
+  name: string;
+  description: string;
+  user_id: string;
+  created_at: string;
 }
 
 export interface RoutineWithExercises extends WorkoutRoutine {

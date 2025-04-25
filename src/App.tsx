@@ -21,7 +21,7 @@ import Admin from "./pages/Admin";
 import Auth from "./pages/Auth";
 import PasswordReset from "./pages/PasswordReset";
 import NotFound from "./pages/NotFound";
-import WorkoutProvider from "./contexts/WorkoutContext";
+import { WorkoutProvider } from "./contexts/WorkoutContext";
 
 const queryClient = new QueryClient({
   defaultOptions: {
