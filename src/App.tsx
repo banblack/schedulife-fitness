@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -57,8 +58,14 @@ const AppRoutes = () => {
   return (
     <Routes>
       <Route path="/" element={<Landing />} />
+      
+      {/* Authentication routes with compatibility redirects */}
       <Route path="/auth" element={user ? <Navigate to="/dashboard" /> : <Auth />} />
+      <Route path="/login" element={<Navigate to="/auth" />} />
+      <Route path="/register" element={<Navigate to="/auth" />} />
+      <Route path="/error" element={<Navigate to="/404" />} />
       <Route path="/update-password" element={<PasswordReset />} />
+      
       <Route
         path="/*"
         element={
