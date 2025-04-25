@@ -21,6 +21,7 @@ import Admin from "./pages/Admin";
 import Auth from "./pages/Auth";
 import PasswordReset from "./pages/PasswordReset";
 import NotFound from "./pages/NotFound";
+import WorkoutProvider from "./contexts/WorkoutContext";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -120,15 +121,17 @@ function App() {
         <ThemeProvider>
           <AuthProvider>
             <ToastProvider>
-              <BrowserRouter>
-                <TooltipProvider>
-                  <Toaster />
-                  <Sonner />
-                  <div className="min-h-screen pb-16 sm:pb-0 sm:pt-16 bg-muted transition-colors duration-300">
-                    <AppRoutes />
-                  </div>
-                </TooltipProvider>
-              </BrowserRouter>
+              <WorkoutProvider>
+                <BrowserRouter>
+                  <TooltipProvider>
+                    <Toaster />
+                    <Sonner />
+                    <div className="min-h-screen pb-16 sm:pb-0 sm:pt-16 bg-muted transition-colors duration-300">
+                      <AppRoutes />
+                    </div>
+                  </TooltipProvider>
+                </BrowserRouter>
+              </WorkoutProvider>
             </ToastProvider>
           </AuthProvider>
         </ThemeProvider>
