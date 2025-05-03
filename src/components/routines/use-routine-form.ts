@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { z } from "zod"; // Add import for 'z'
+import { z } from "zod";
 import { routineSchema, type ExerciseFormData, type RoutineFormData } from "./validation-schema";
 import { supabase } from "@/lib/supabase";
 import { toast } from "@/hooks/use-toast";
