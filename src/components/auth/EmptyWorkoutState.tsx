@@ -14,7 +14,7 @@ export const EmptyWorkoutState = ({ onCreateRoutine }: EmptyWorkoutStateProps) =
         <div className="rounded-full bg-primary/10 p-4 mb-4">
           <Plus className="h-8 w-8 text-primary" />
         </div>
-        <h3 className="text-xl font-semibold mb-2">No tienes rutinas todavía</h3>
+        <h3 className="text-xl font-semibold mb-2">Aún no tienes rutinas</h3>
         <p className="text-muted-foreground mb-6">
           Comienza tu viaje fitness creando tu primera rutina de entrenamiento
         </p>

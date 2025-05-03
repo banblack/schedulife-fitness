@@ -17,6 +17,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { useAuth } from '@/contexts/AuthContext';
 
 interface WorkoutRoutine {
   id: string;
@@ -39,12 +40,17 @@ export const RoutinesList = () => {
   const [selectedRoutine, setSelectedRoutine] = useState<WorkoutRoutine | null>(null);
   const [routineToDelete, setRoutineToDelete] = useState<string | null>(null);
   const { toast } = useToast();
+  const { user } = useAuth();
 
   const fetchRoutines = async () => {
+    if (!user) return;
+
     try {
+      setLoading(true);
       const { data: routinesData, error: routinesError } = await supabase
         .from('workout_routines')
         .select('*')
+        .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 
       if (routinesError) throw routinesError;
@@ -81,7 +87,7 @@ export const RoutinesList = () => {
 
   useEffect(() => {
     fetchRoutines();
-  }, []);
+  }, [user]);
 
   const handleCreateRoutine = () => {
     setSelectedRoutine(null);
