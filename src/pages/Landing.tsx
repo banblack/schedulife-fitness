@@ -14,7 +14,10 @@ const Landing = () => {
   const handleDemoLogin = async () => {
     const { success, error } = await signInAsDemo();
     if (success) {
+      // After successful demo login, navigate to dashboard and reload page
+      // to ensure all components pick up the demo user state
       navigate('/dashboard');
+      window.location.reload();
     } else {
       toast({
         title: "Error",

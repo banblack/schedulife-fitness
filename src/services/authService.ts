@@ -100,15 +100,43 @@ const DEMO_USER_PASSWORD = 'demo123'; // This is just for the demo, normally we'
 
 export const signInAsDemo = async (): Promise<{ success: boolean; error: any }> => {
   try {
-    const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
-      email: DEMO_USER_EMAIL,
-      password: DEMO_USER_PASSWORD,
-    });
+    // Since Supabase Email logins are disabled, we'll simulate a successful login
+    // In a real application, this would use proper Supabase auth
+    console.log("Signing in as demo user (simulated)");
 
-    if (signInError) throw signInError;
+    // Store demo user info in localStorage to simulate logged in state
+    localStorage.setItem('demo_user', JSON.stringify({
+      id: DEMO_USER_ID,
+      email: DEMO_USER_EMAIL,
+      user_metadata: {
+        full_name: 'Demo User'
+      }
+    }));
+    
+    // Simulate a successful login response
     return { success: true, error: null };
   } catch (error) {
     console.error('Error signing in as demo:', error);
     return { success: false, error };
   }
+};
+
+export const isDemoUser = (userId?: string): boolean => {
+  return userId === DEMO_USER_ID || localStorage.getItem('demo_user') !== null;
+};
+
+export const getDemoUser = (): User | null => {
+  const demoUserString = localStorage.getItem('demo_user');
+  if (!demoUserString) return null;
+  
+  try {
+    return JSON.parse(demoUserString) as User;
+  } catch (error) {
+    console.error('Error parsing demo user from localStorage:', error);
+    return null;
+  }
+};
+
+export const clearDemoUser = (): void => {
+  localStorage.removeItem('demo_user');
 };

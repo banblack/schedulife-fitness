@@ -3,6 +3,7 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { User, Session } from '@supabase/supabase-js';
 import { useToast } from '@/components/ui/use-toast';
+import { isDemoUser, getDemoUser, clearDemoUser } from '@/services/authService';
 
 type AuthContextType = {
   user: User | null;
@@ -12,6 +13,7 @@ type AuthContextType = {
   signOut: () => Promise<void>;
   loading: boolean;
   refreshSession: () => Promise<void>;
+  isDemo: boolean;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -20,10 +22,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isDemo, setIsDemo] = useState(false);
   const { toast } = useToast();
 
   // Function to refresh the session
   const refreshSession = async () => {
+    // Handle demo user case
+    if (isDemo) {
+      const demoUser = getDemoUser();
+      if (demoUser) {
+        setUser(demoUser);
+      }
+      return;
+    }
+
+    // Handle real Supabase auth
     const { data, error } = await supabase.auth.refreshSession();
     if (error) {
       console.error('Error refreshing session:', error);
@@ -34,19 +47,30 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   useEffect(() => {
-    // Set up auth state listener FIRST
+    // First check if there's a demo user in localStorage
+    const demoUser = getDemoUser();
+    if (demoUser) {
+      setUser(demoUser);
+      setIsDemo(true);
+      setLoading(false);
+      return;
+    }
+
+    // If no demo user, proceed with normal Supabase auth
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (_event, session) => {
         setSession(session);
         setUser(session?.user ?? null);
+        setIsDemo(session?.user ? isDemoUser(session.user.id) : false);
         setLoading(false);
       }
     );
 
-    // THEN check for existing session
+    // Check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
+      setIsDemo(session?.user ? isDemoUser(session.user.id) : false);
       setLoading(false);
     });
 
@@ -132,6 +156,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signOut = async () => {
     try {
+      // Handle demo user logout
+      if (isDemo) {
+        clearDemoUser();
+        setUser(null);
+        setIsDemo(false);
+        toast({
+          title: "Signed out",
+          description: "Demo user has been signed out",
+        });
+        return;
+      }
+      
+      // Handle real Supabase auth logout
       await supabase.auth.signOut();
       toast({
         title: "Signed out",
@@ -156,6 +193,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         signOut,
         loading,
         refreshSession,
+        isDemo,
       }}
     >
       {children}

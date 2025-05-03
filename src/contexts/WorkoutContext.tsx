@@ -4,6 +4,71 @@ import { supabase } from '@/lib/supabase';
 import { useToast } from '@/components/ui/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { RoutineWithExercises, WorkoutContextType } from '@/types/workout';
+import { isDemoUser } from '@/services/authService';
+
+// Demo data for routines
+const DEMO_ROUTINES: RoutineWithExercises[] = [
+  {
+    id: "demo-routine-1",
+    name: "Fuerza para Voleibol",
+    description: "Rutina de ejercicios para fortalecer los músculos usados en voleibol",
+    user_id: "12345678-1234-1234-1234-123456789012",
+    created_at: new Date().toISOString(),
+    exercises: [
+      {
+        id: "demo-ex-1",
+        name: "Sentadillas con Salto",
+        sets: 3,
+        reps: "12",
+        day_of_week: "Lunes"
+      },
+      {
+        id: "demo-ex-2",
+        name: "Press de Hombros",
+        sets: 4,
+        reps: "10",
+        day_of_week: "Lunes"
+      },
+      {
+        id: "demo-ex-3",
+        name: "Planchas con Rotación",
+        sets: 3,
+        reps: "12 por lado",
+        day_of_week: "Miércoles"
+      }
+    ]
+  },
+  {
+    id: "demo-routine-2",
+    name: "Cardio HIIT",
+    description: "Entrenamiento de alta intensidad para mejorar resistencia",
+    user_id: "12345678-1234-1234-1234-123456789012",
+    created_at: new Date(Date.now() - 86400000).toISOString(),
+    exercises: [
+      {
+        id: "demo-ex-4",
+        name: "Burpees",
+        sets: 5,
+        reps: "45 segundos",
+        day_of_week: "Martes"
+      },
+      {
+        id: "demo-ex-5",
+        name: "Mountain Climbers",
+        sets: 5,
+        reps: "45 segundos",
+        day_of_week: "Martes"
+      },
+      {
+        id: "demo-ex-6",
+        name: "Jumping Jacks",
+        sets: 5,
+        reps: "45 segundos",
+        day_of_week: "Jueves"
+      }
+    ]
+  }
+];
 
 const WorkoutContext = createContext<WorkoutContextType | undefined>(undefined);
 
@@ -12,13 +77,24 @@ export const WorkoutProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const [isLoadingRoutines, setIsLoadingRoutines] = useState(true);
   const [error, setError] = useState<Error | null>(null);
   const { toast } = useToast();
-  const { user } = useAuth();
+  const { user, isDemo } = useAuth();
 
   const fetchRoutines = async () => {
     try {
       if (!user) return;
 
       setIsLoadingRoutines(true);
+
+      // If demo user, return demo data
+      if (isDemo || isDemoUser(user.id)) {
+        console.log("Loading demo routines");
+        setRoutines(DEMO_ROUTINES);
+        setIsLoadingRoutines(false);
+        setError(null);
+        return;
+      }
+
+      // For real users, fetch from Supabase
       const { data: routinesData, error: routinesError } = await supabase
         .from('workout_routines')
         .select('*')
@@ -59,9 +135,11 @@ export const WorkoutProvider: React.FC<{ children: React.ReactNode }> = ({ child
     }
   };
 
-  // Cargar rutinas cuando cambie el usuario
+  // Load routines when user changes
   useEffect(() => {
-    fetchRoutines();
+    if (user) {
+      fetchRoutines();
+    }
   }, [user]);
 
   const value = {
