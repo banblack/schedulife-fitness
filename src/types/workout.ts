@@ -41,5 +41,26 @@ export interface WorkoutContextType {
   routines: RoutineWithExercises[];
   isLoadingRoutines: boolean;
   refreshRoutines: () => Promise<void>;
+  createRoutine: (routine: Partial<RoutineWithExercises>) => Promise<any>;
   error: Error | null;
+}
+
+export interface WorkoutSession {
+  id?: string;
+  user_id: string;
+  routine_id?: string;
+  date: string;
+  duration: number; // in minutes
+  exercises: WorkoutExercise[];
+  notes?: string;
+  completed: boolean;
+  created_at?: string;
+}
+
+export interface WorkoutExercise {
+  name: string;
+  sets: number;
+  reps: string;
+  weight?: number;
+  completed: boolean;
 }

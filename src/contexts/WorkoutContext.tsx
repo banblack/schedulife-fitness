@@ -135,6 +135,80 @@ export const WorkoutProvider: React.FC<{ children: React.ReactNode }> = ({ child
     }
   };
 
+  // Create a new routine (support for both demo and real users)
+  const createRoutine = async (routineData: Partial<RoutineWithExercises>) => {
+    try {
+      if (!user) return null;
+
+      // For demo users, create in memory
+      if (isDemo || isDemoUser(user.id)) {
+        const newRoutine: RoutineWithExercises = {
+          id: `demo-routine-${Date.now()}`,
+          name: routineData.name || 'New Routine',
+          description: routineData.description || '',
+          user_id: user.id,
+          created_at: new Date().toISOString(),
+          exercises: routineData.exercises || []
+        };
+
+        setRoutines(prev => [newRoutine, ...prev]);
+        toast({
+          title: "Success",
+          description: "Routine created successfully (demo mode)",
+        });
+        
+        return newRoutine;
+      }
+
+      // For real users, save to Supabase
+      const { data: newRoutine, error: routineError } = await supabase
+        .from('workout_routines')
+        .insert({
+          name: routineData.name,
+          description: routineData.description,
+          user_id: user.id,
+          created_at: new Date().toISOString(),
+        })
+        .select()
+        .single();
+
+      if (routineError) throw routineError;
+
+      // If there are exercises, add them too
+      if (routineData.exercises && routineData.exercises.length > 0) {
+        const exercisesWithRoutineId = routineData.exercises.map(exercise => ({
+          ...exercise,
+          routine_id: newRoutine.id,
+          created_at: new Date().toISOString(),
+        }));
+
+        const { error: exercisesError } = await supabase
+          .from('routine_exercises')
+          .insert(exercisesWithRoutineId);
+
+        if (exercisesError) throw exercisesError;
+      }
+
+      // Refresh routines
+      await fetchRoutines();
+
+      toast({
+        title: "Success",
+        description: "Routine created successfully",
+      });
+
+      return newRoutine;
+    } catch (err) {
+      console.error('Error creating routine:', err);
+      toast({
+        title: "Error",
+        description: "Failed to create routine",
+        variant: "destructive",
+      });
+      return null;
+    }
+  };
+
   // Load routines when user changes
   useEffect(() => {
     if (user) {
@@ -146,6 +220,7 @@ export const WorkoutProvider: React.FC<{ children: React.ReactNode }> = ({ child
     routines,
     isLoadingRoutines,
     refreshRoutines: fetchRoutines,
+    createRoutine,
     error,
   };
 

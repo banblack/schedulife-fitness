@@ -23,6 +23,7 @@ import Auth from "./pages/Auth";
 import PasswordReset from "./pages/PasswordReset";
 import NotFound from "./pages/NotFound";
 import { WorkoutProvider } from "./contexts/WorkoutContext";
+import WorkoutTracking from "./pages/WorkoutTracking";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -105,6 +106,11 @@ const AppRoutes = () => {
               <Route path="/subscriptions" element={
                 <ProtectedRoute>
                   <Subscriptions />
+                </ProtectedRoute>
+              } />
+              <Route path="/workout-tracking" element={
+                <ProtectedRoute>
+                  <WorkoutTracking />
                 </ProtectedRoute>
               } />
               <Route path="/admin" element={
