@@ -67,7 +67,7 @@ export const WorkoutHistory = () => {
                       <Calendar className="h-4 w-4" />
                       <span>{format(new Date(session.date), 'PP')}</span>
                       {session.completed ? (
-                        <Badge variant="success" className="ml-2 bg-green-100 text-green-800">
+                        <Badge variant="secondary" className="ml-2 bg-green-100 text-green-800">
                           Completed
                         </Badge>
                       ) : (

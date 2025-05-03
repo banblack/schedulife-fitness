@@ -6,8 +6,12 @@ import {
   saveWorkoutSession, 
   getUserWorkoutSessions, 
   deleteWorkoutSession,
-  WorkoutSession
+  WorkoutSession,
+  WorkoutExercise
 } from '@/services/workoutTracking';
+
+// Re-export the types from the service for easier import
+export type { WorkoutSession, WorkoutExercise };
 
 export const useWorkoutTracking = () => {
   const { user } = useAuth();
