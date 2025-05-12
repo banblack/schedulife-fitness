@@ -74,7 +74,6 @@ export const saveWorkoutSession = async (
       .insert({
         ...session,
         user_id: userId,
-        created_at: new Date().toISOString(),
       })
       .select()
       .single();

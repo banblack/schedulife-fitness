@@ -585,6 +585,50 @@ export type Database = {
         }
         Relationships: []
       }
+      workout_sessions: {
+        Row: {
+          completed: boolean
+          created_at: string | null
+          date: string
+          duration: number
+          exercises: Json
+          id: string
+          notes: string | null
+          routine_id: string | null
+          user_id: string
+        }
+        Insert: {
+          completed?: boolean
+          created_at?: string | null
+          date?: string
+          duration: number
+          exercises?: Json
+          id?: string
+          notes?: string | null
+          routine_id?: string | null
+          user_id: string
+        }
+        Update: {
+          completed?: boolean
+          created_at?: string | null
+          date?: string
+          duration?: number
+          exercises?: Json
+          id?: string
+          notes?: string | null
+          routine_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "workout_sessions_routine_id_fkey"
+            columns: ["routine_id"]
+            isOneToOne: false
+            referencedRelation: "workout_routines"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       workouts: {
         Row: {
           id: string
