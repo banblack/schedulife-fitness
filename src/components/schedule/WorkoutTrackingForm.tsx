@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -7,9 +7,10 @@ import { Label } from '@/components/ui/label';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { useWorkoutTracking, WorkoutSession, WorkoutExercise } from '@/hooks/useWorkoutTracking';
-import { PlusCircle, Save, Trash2, Clock } from 'lucide-react';
+import { PlusCircle, Save, Trash2, Clock, AlertCircle } from 'lucide-react';
 import { format } from 'date-fns';
 import { toast } from '@/hooks/use-toast';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 interface WorkoutTrackingFormProps {
   routineId?: string;
@@ -46,13 +47,51 @@ export const WorkoutTrackingForm = ({
     reps: '10',
     completed: false
   });
+
+  const [addExerciseOpen, setAddExerciseOpen] = useState(false);
+  const [errors, setErrors] = useState<{[key: string]: string}>({});
+  
+  // Reset form when routine changes
+  useEffect(() => {
+    setWorkout({
+      routine_id: routineId,
+      date: format(new Date(), 'yyyy-MM-dd'),
+      duration: 0,
+      notes: '',
+      completed: false,
+      exercises: exercises.map(ex => ({
+        name: ex.name,
+        sets: ex.sets,
+        reps: ex.reps,
+        completed: false
+      }))
+    });
+  }, [routineId, exercises]);
+  
+  const validateForm = () => {
+    const newErrors: {[key: string]: string} = {};
+    
+    if (!workout.duration || workout.duration <= 0) {
+      newErrors.duration = "La duración debe ser mayor a 0 minutos";
+    }
+    
+    if (!workout.exercises?.length) {
+      newErrors.exercises = "Debes agregar al menos un ejercicio";
+    }
+
+    if (!workout.date) {
+      newErrors.date = "La fecha es requerida";
+    }
+    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
   
   const addExercise = () => {
     if (!newExercise.name) {
-      toast({
-        title: "Error",
-        description: "Exercise name is required",
-        variant: "destructive",
+      setErrors({
+        ...errors,
+        newExercise: "El nombre del ejercicio es requerido"
       });
       return;
     }
@@ -68,6 +107,14 @@ export const WorkoutTrackingForm = ({
       reps: '10',
       completed: false
     });
+    
+    setErrors({
+      ...errors,
+      exercises: undefined,
+      newExercise: undefined
+    });
+    
+    setAddExerciseOpen(false);
   };
   
   const removeExercise = (index: number) => {
@@ -89,33 +136,55 @@ export const WorkoutTrackingForm = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!workout.duration) {
+    if (!validateForm()) {
       toast({
         title: "Error",
-        description: "Please enter workout duration",
+        description: "Por favor corrige los errores en el formulario",
         variant: "destructive",
       });
       return;
     }
     
-    if (!workout.exercises?.length) {
+    try {
+      const allExercisesCompleted = workout.exercises?.every(ex => ex.completed) || false;
+      
+      const result = await trackWorkout({
+        ...workout as WorkoutSession,
+        completed: allExercisesCompleted
+      });
+      
+      if (result) {
+        toast({
+          title: "Entrenamiento guardado",
+          description: "Tu entrenamiento ha sido registrado correctamente",
+        });
+        
+        // Reset form
+        setWorkout({
+          routine_id: routineId,
+          date: format(new Date(), 'yyyy-MM-dd'),
+          duration: 0,
+          notes: '',
+          completed: false,
+          exercises: exercises.map(ex => ({
+            name: ex.name,
+            sets: ex.sets,
+            reps: ex.reps,
+            completed: false
+          }))
+        });
+        
+        if (onComplete) {
+          onComplete();
+        }
+      }
+    } catch (error) {
+      console.error('Error al guardar el entrenamiento:', error);
       toast({
         title: "Error",
-        description: "Please add at least one exercise",
+        description: "No se pudo guardar el entrenamiento. Intenta de nuevo más tarde.",
         variant: "destructive",
       });
-      return;
-    }
-    
-    const allExercisesCompleted = workout.exercises.every(ex => ex.completed);
-    
-    const result = await trackWorkout({
-      ...workout as WorkoutSession,
-      completed: allExercisesCompleted
-    });
-    
-    if (result && onComplete) {
-      onComplete();
     }
   };
   
@@ -123,30 +192,49 @@ export const WorkoutTrackingForm = ({
     <Card className="w-full">
       <CardHeader>
         <CardTitle className="text-xl">
-          {routineName ? `Track: ${routineName}` : 'Track Workout'}
+          {routineName ? `Registrar: ${routineName}` : 'Registrar Entrenamiento'}
         </CardTitle>
         <CardDescription>
-          Record your workout details and progress
+          Registra los detalles de tu entrenamiento y tu progreso
         </CardDescription>
       </CardHeader>
       
       <form onSubmit={handleSubmit}>
         <CardContent className="space-y-4">
+          {Object.keys(errors).length > 0 && (
+            <Alert variant="destructive" className="mb-4">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>
+                Por favor corrige los errores en el formulario para continuar
+              </AlertDescription>
+            </Alert>
+          )}
+          
           <div className="space-y-2">
-            <Label htmlFor="workout-date">Date</Label>
+            <Label htmlFor="workout-date">Fecha</Label>
             <Input
               id="workout-date"
               type="date"
               value={workout.date}
-              onChange={e => setWorkout({ ...workout, date: e.target.value })}
+              onChange={e => {
+                setWorkout({ ...workout, date: e.target.value });
+                if (errors.date) {
+                  const { date, ...rest } = errors;
+                  setErrors(rest);
+                }
+              }}
+              className={errors.date ? "border-destructive" : ""}
             />
+            {errors.date && (
+              <p className="text-sm text-destructive">{errors.date}</p>
+            )}
           </div>
           
           <div className="space-y-2">
             <Label htmlFor="workout-duration">
               <div className="flex items-center">
                 <Clock className="mr-2 h-4 w-4" />
-                Duration (minutes)
+                Duración (minutos)
               </div>
             </Label>
             <Input
@@ -154,60 +242,80 @@ export const WorkoutTrackingForm = ({
               type="number"
               min={1}
               value={workout.duration || ''}
-              onChange={e => setWorkout({ ...workout, duration: parseInt(e.target.value) })}
+              onChange={e => {
+                setWorkout({ ...workout, duration: parseInt(e.target.value) || 0 });
+                if (errors.duration) {
+                  const { duration, ...rest } = errors;
+                  setErrors(rest);
+                }
+              }}
+              className={errors.duration ? "border-destructive" : ""}
             />
+            {errors.duration && (
+              <p className="text-sm text-destructive">{errors.duration}</p>
+            )}
           </div>
           
           <div className="space-y-2">
             <div className="flex justify-between items-center">
-              <Label>Exercises</Label>
-              <Dialog>
+              <Label>Ejercicios</Label>
+              <Dialog open={addExerciseOpen} onOpenChange={setAddExerciseOpen}>
                 <DialogTrigger asChild>
                   <Button variant="ghost" size="sm">
                     <PlusCircle className="mr-2 h-4 w-4" />
-                    Add Exercise
+                    Añadir Ejercicio
                   </Button>
                 </DialogTrigger>
                 <DialogContent>
                   <DialogHeader>
-                    <DialogTitle>Add New Exercise</DialogTitle>
+                    <DialogTitle>Añadir Nuevo Ejercicio</DialogTitle>
                   </DialogHeader>
                   <div className="space-y-4 py-4">
                     <div className="space-y-2">
-                      <Label htmlFor="exercise-name">Exercise Name</Label>
+                      <Label htmlFor="exercise-name">Nombre del Ejercicio</Label>
                       <Input
                         id="exercise-name"
                         value={newExercise.name}
-                        onChange={e => setNewExercise({ ...newExercise, name: e.target.value })}
-                        placeholder="e.g., Push Ups"
+                        onChange={e => {
+                          setNewExercise({ ...newExercise, name: e.target.value });
+                          if (errors.newExercise) {
+                            const { newExercise, ...rest } = errors;
+                            setErrors(rest);
+                          }
+                        }}
+                        placeholder="ej. Flexiones"
+                        className={errors.newExercise ? "border-destructive" : ""}
                       />
+                      {errors.newExercise && (
+                        <p className="text-sm text-destructive">{errors.newExercise}</p>
+                      )}
                     </div>
                     
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <Label htmlFor="exercise-sets">Sets</Label>
+                        <Label htmlFor="exercise-sets">Series</Label>
                         <Input
                           id="exercise-sets"
                           type="number"
                           min={1}
                           value={newExercise.sets}
-                          onChange={e => setNewExercise({ ...newExercise, sets: parseInt(e.target.value) })}
+                          onChange={e => setNewExercise({ ...newExercise, sets: parseInt(e.target.value) || 1 })}
                         />
                       </div>
                       
                       <div className="space-y-2">
-                        <Label htmlFor="exercise-reps">Reps</Label>
+                        <Label htmlFor="exercise-reps">Repeticiones</Label>
                         <Input
                           id="exercise-reps"
                           value={newExercise.reps}
                           onChange={e => setNewExercise({ ...newExercise, reps: e.target.value })}
-                          placeholder="e.g., 10 or 30 sec"
+                          placeholder="ej. 10 o 30 sec"
                         />
                       </div>
                     </div>
                     
                     <Button type="button" onClick={addExercise} className="w-full">
-                      Add Exercise
+                      Añadir Ejercicio
                     </Button>
                   </div>
                 </DialogContent>
@@ -224,10 +332,14 @@ export const WorkoutTrackingForm = ({
                         checked={exercise.completed}
                         onChange={() => toggleExerciseCompletion(index)}
                         className="mr-2 h-4 w-4"
+                        id={`exercise-${index}`}
                       />
-                      <span className={exercise.completed ? "line-through text-muted-foreground" : ""}>
-                        {exercise.name} - {exercise.sets} sets × {exercise.reps}
-                      </span>
+                      <label 
+                        htmlFor={`exercise-${index}`}
+                        className={exercise.completed ? "line-through text-muted-foreground cursor-pointer" : "cursor-pointer"}
+                      >
+                        {exercise.name} - {exercise.sets} series × {exercise.reps}
+                      </label>
                     </div>
                     <Button 
                       variant="ghost" 
@@ -241,28 +353,35 @@ export const WorkoutTrackingForm = ({
                 ))}
               </div>
             ) : (
-              <p className="text-center text-muted-foreground py-4">
-                No exercises added yet
-              </p>
+              <div className="text-center text-muted-foreground py-4 border rounded-md">
+                <p>No hay ejercicios añadidos aún</p>
+                {errors.exercises && (
+                  <p className="text-sm text-destructive mt-2">{errors.exercises}</p>
+                )}
+              </div>
             )}
           </div>
           
           <div className="space-y-2">
-            <Label htmlFor="workout-notes">Notes</Label>
+            <Label htmlFor="workout-notes">Notas</Label>
             <Textarea
               id="workout-notes"
               value={workout.notes || ''}
               onChange={e => setWorkout({ ...workout, notes: e.target.value })}
-              placeholder="How was your workout? Any PRs?"
+              placeholder="¿Cómo fue tu entrenamiento? ¿Algún récord personal?"
               rows={3}
             />
           </div>
         </CardContent>
         
         <CardFooter>
-          <Button type="submit" className="w-full" disabled={isLoading}>
+          <Button 
+            type="submit" 
+            className="w-full" 
+            disabled={isLoading}
+          >
             <Save className="mr-2 h-4 w-4" />
-            {isLoading ? 'Saving...' : 'Save Workout'}
+            {isLoading ? 'Guardando...' : 'Guardar Entrenamiento'}
           </Button>
         </CardFooter>
       </form>
