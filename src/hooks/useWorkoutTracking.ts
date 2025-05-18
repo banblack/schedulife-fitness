@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { 
@@ -7,18 +7,23 @@ import {
   getUserWorkoutSessions, 
   deleteWorkoutSession,
   WorkoutSession,
-  WorkoutExercise
+  WorkoutExercise,
+  PaginationOptions,
+  validateWorkoutSession
 } from '@/services/workoutTracking';
 
 // Re-export the types from the service for easier import
-export type { WorkoutSession, WorkoutExercise };
+export type { WorkoutSession, WorkoutExercise, PaginationOptions };
 
 export const useWorkoutTracking = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [workoutHistory, setWorkoutHistory] = useState<WorkoutSession[]>([]);
-
+  const [totalSessions, setTotalSessions] = useState(0);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  
   const trackWorkout = async (workout: Omit<WorkoutSession, 'user_id'>) => {
     if (!user) {
       toast({
@@ -32,6 +37,21 @@ export const useWorkoutTracking = () => {
     setIsLoading(true);
     
     try {
+      // Validate workout data with our frontend validation
+      const validationError = validateWorkoutSession({ 
+        ...workout, 
+        user_id: user.id 
+      });
+      
+      if (validationError) {
+        toast({
+          title: "Validation Error",
+          description: validationError.message,
+          variant: "destructive",
+        });
+        return null;
+      }
+      
       const { data, error } = await saveWorkoutSession(
         { ...workout, user_id: user.id },
         user.id
@@ -46,6 +66,7 @@ export const useWorkoutTracking = () => {
       
       // Update local state
       setWorkoutHistory(prev => [data!, ...prev]);
+      setTotalSessions(prev => prev + 1);
       
       return data;
     } catch (error) {
@@ -61,16 +82,30 @@ export const useWorkoutTracking = () => {
     }
   };
 
-  const loadWorkoutHistory = async () => {
+  const loadWorkoutHistory = useCallback(async (page = 1, size = pageSize) => {
     if (!user) return;
     
     setIsLoading(true);
+    setCurrentPage(page);
+    
+    if (size !== pageSize) {
+      setPageSize(size);
+    }
     
     try {
-      const { data, error } = await getUserWorkoutSessions(user.id);
+      const pagination: PaginationOptions = { 
+        page, 
+        pageSize: size 
+      };
+      
+      const { data, error, count } = await getUserWorkoutSessions(
+        user.id,
+        pagination
+      );
       
       if (error) throw error;
       setWorkoutHistory(data);
+      setTotalSessions(count);
     } catch (error) {
       console.error('Error loading workout history:', error);
       toast({
@@ -81,7 +116,7 @@ export const useWorkoutTracking = () => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [user, pageSize, toast]);
 
   const removeWorkout = async (sessionId: string) => {
     if (!user) return false;
@@ -96,6 +131,8 @@ export const useWorkoutTracking = () => {
       // Update local state
       if (success) {
         setWorkoutHistory(prev => prev.filter(session => session.id !== sessionId));
+        setTotalSessions(prev => prev - 1);
+        
         toast({
           title: "Success",
           description: "Workout deleted successfully",
@@ -121,6 +158,11 @@ export const useWorkoutTracking = () => {
     loadWorkoutHistory,
     removeWorkout,
     workoutHistory,
+    totalSessions,
+    currentPage,
+    pageSize,
+    setPageSize,
+    setCurrentPage,
     isLoading
   };
 };

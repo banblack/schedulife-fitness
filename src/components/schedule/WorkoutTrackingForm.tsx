@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -11,6 +11,7 @@ import { PlusCircle, Save, Trash2, Clock, AlertCircle } from 'lucide-react';
 import { format } from 'date-fns';
 import { toast } from '@/hooks/use-toast';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { validateWorkoutSession } from '@/services/workoutTracking';
 
 interface WorkoutTrackingFormProps {
   routineId?: string;
@@ -51,7 +52,7 @@ export const WorkoutTrackingForm = ({
   const [addExerciseOpen, setAddExerciseOpen] = useState(false);
   const [errors, setErrors] = useState<{[key: string]: string}>({});
   
-  // Reset form when routine changes
+  // Reset form when routine changes - memoized dependencies
   useEffect(() => {
     setWorkout({
       routine_id: routineId,
@@ -68,26 +69,52 @@ export const WorkoutTrackingForm = ({
     });
   }, [routineId, exercises]);
   
-  const validateForm = () => {
-    const newErrors: {[key: string]: string} = {};
-    
-    if (!workout.duration || workout.duration <= 0) {
-      newErrors.duration = "La duración debe ser mayor a 0 minutos";
+  // Memoize the validation function
+  const validateForm = useCallback(() => {
+    if (!workout.user_id) {
+      // This is just for form validation, so we can use a temporary ID
+      // The actual user_id will be set by the trackWorkout function
+      const tempUserId = 'temp-user-id';
+      
+      const validationError = validateWorkoutSession({
+        ...workout as WorkoutSession,
+        user_id: tempUserId
+      });
+      
+      if (validationError) {
+        const errorMessage = validationError.message;
+        
+        // Map the error message to specific form fields
+        const newErrors: {[key: string]: string} = {};
+        
+        if (errorMessage.includes('Duration')) {
+          newErrors.duration = errorMessage;
+        }
+        
+        if (errorMessage.includes('Workout date')) {
+          newErrors.date = errorMessage;
+        }
+        
+        if (errorMessage.includes('one exercise')) {
+          newErrors.exercises = errorMessage;
+        }
+        
+        // If we couldn't map to a specific field, set a general error
+        if (Object.keys(newErrors).length === 0) {
+          newErrors.general = errorMessage;
+        }
+        
+        setErrors(newErrors);
+        return false;
+      }
     }
     
-    if (!workout.exercises?.length) {
-      newErrors.exercises = "Debes agregar al menos un ejercicio";
-    }
-
-    if (!workout.date) {
-      newErrors.date = "La fecha es requerida";
-    }
-    
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
+    setErrors({});
+    return true;
+  }, [workout]);
   
-  const addExercise = () => {
+  // Memoize the addExercise function
+  const addExercise = useCallback(() => {
     if (!newExercise.name) {
       setErrors({
         ...errors,
@@ -115,25 +142,28 @@ export const WorkoutTrackingForm = ({
     });
     
     setAddExerciseOpen(false);
-  };
+  }, [newExercise, errors]);
   
-  const removeExercise = (index: number) => {
+  // Memoize the removeExercise function
+  const removeExercise = useCallback((index: number) => {
     setWorkout(prev => ({
       ...prev,
       exercises: prev.exercises?.filter((_, i) => i !== index) || []
     }));
-  };
+  }, []);
   
-  const toggleExerciseCompletion = (index: number) => {
+  // Memoize the toggleExerciseCompletion function
+  const toggleExerciseCompletion = useCallback((index: number) => {
     setWorkout(prev => ({
       ...prev,
       exercises: prev.exercises?.map((ex, i) => 
         i === index ? { ...ex, completed: !ex.completed } : ex
       ) || []
     }));
-  };
+  }, []);
   
-  const handleSubmit = async (e: React.FormEvent) => {
+  // Memoize the form submission handler
+  const handleSubmit = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!validateForm()) {
@@ -186,7 +216,53 @@ export const WorkoutTrackingForm = ({
         variant: "destructive",
       });
     }
-  };
+  }, [workout, validateForm, trackWorkout, routineId, exercises, onComplete]);
+
+  // Memoize the entire exercise list for better performance
+  const exercisesList = useMemo(() => {
+    if (!workout.exercises || workout.exercises.length === 0) {
+      return (
+        <div className="text-center text-muted-foreground py-4 border rounded-md">
+          <p>No hay ejercicios añadidos aún</p>
+          {errors.exercises && (
+            <p className="text-sm text-destructive mt-2">{errors.exercises}</p>
+          )}
+        </div>
+      );
+    }
+    
+    return (
+      <div className="space-y-2 border rounded-md p-4">
+        {workout.exercises.map((exercise, index) => (
+          <div key={index} className="flex items-center justify-between py-2 border-b last:border-b-0">
+            <div className="flex items-center">
+              <input
+                type="checkbox"
+                checked={exercise.completed}
+                onChange={() => toggleExerciseCompletion(index)}
+                className="mr-2 h-4 w-4"
+                id={`exercise-${index}`}
+              />
+              <label 
+                htmlFor={`exercise-${index}`}
+                className={exercise.completed ? "line-through text-muted-foreground cursor-pointer" : "cursor-pointer"}
+              >
+                {exercise.name} - {exercise.sets} series × {exercise.reps}
+              </label>
+            </div>
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={() => removeExercise(index)}
+              type="button"
+            >
+              <Trash2 className="h-4 w-4 text-red-500" />
+            </Button>
+          </div>
+        ))}
+      </div>
+    );
+  }, [workout.exercises, errors.exercises, toggleExerciseCompletion, removeExercise]);
   
   return (
     <Card className="w-full">
@@ -201,11 +277,11 @@ export const WorkoutTrackingForm = ({
       
       <form onSubmit={handleSubmit}>
         <CardContent className="space-y-4">
-          {Object.keys(errors).length > 0 && (
+          {Object.keys(errors).length > 0 && errors.general && (
             <Alert variant="destructive" className="mb-4">
               <AlertCircle className="h-4 w-4" />
               <AlertDescription>
-                Por favor corrige los errores en el formulario para continuar
+                {errors.general}
               </AlertDescription>
             </Alert>
           )}
@@ -322,44 +398,7 @@ export const WorkoutTrackingForm = ({
               </Dialog>
             </div>
             
-            {workout.exercises && workout.exercises.length > 0 ? (
-              <div className="space-y-2 border rounded-md p-4">
-                {workout.exercises.map((exercise, index) => (
-                  <div key={index} className="flex items-center justify-between py-2 border-b last:border-b-0">
-                    <div className="flex items-center">
-                      <input
-                        type="checkbox"
-                        checked={exercise.completed}
-                        onChange={() => toggleExerciseCompletion(index)}
-                        className="mr-2 h-4 w-4"
-                        id={`exercise-${index}`}
-                      />
-                      <label 
-                        htmlFor={`exercise-${index}`}
-                        className={exercise.completed ? "line-through text-muted-foreground cursor-pointer" : "cursor-pointer"}
-                      >
-                        {exercise.name} - {exercise.sets} series × {exercise.reps}
-                      </label>
-                    </div>
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      onClick={() => removeExercise(index)}
-                      type="button"
-                    >
-                      <Trash2 className="h-4 w-4 text-red-500" />
-                    </Button>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="text-center text-muted-foreground py-4 border rounded-md">
-                <p>No hay ejercicios añadidos aún</p>
-                {errors.exercises && (
-                  <p className="text-sm text-destructive mt-2">{errors.exercises}</p>
-                )}
-              </div>
-            )}
+            {exercisesList}
           </div>
           
           <div className="space-y-2">
