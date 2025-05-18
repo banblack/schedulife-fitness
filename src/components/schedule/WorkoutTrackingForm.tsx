@@ -1,17 +1,18 @@
 
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { useWorkoutTracking, WorkoutSession, WorkoutExercise } from '@/hooks/useWorkoutTracking';
-import { PlusCircle, Save, Trash2, Clock, AlertCircle } from 'lucide-react';
+import { Save, Clock, AlertCircle } from 'lucide-react';
 import { format } from 'date-fns';
 import { toast } from '@/hooks/use-toast';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { validateWorkoutSession } from '@/services/workoutTracking';
+import { AddExerciseDialog } from './workout-tracking/AddExerciseDialog';
+import { ExerciseList } from './workout-tracking/ExerciseList';
 
 interface WorkoutTrackingFormProps {
   routineId?: string;
@@ -42,18 +43,10 @@ export const WorkoutTrackingForm = ({
     }))
   });
   
-  const [newExercise, setNewExercise] = useState<Partial<WorkoutExercise>>({
-    name: '',
-    sets: 3,
-    reps: '10',
-    completed: false
-  });
-
-  const [addExerciseOpen, setAddExerciseOpen] = useState(false);
   const [errors, setErrors] = useState<{[key: string]: string}>({});
   
-  // Reset form when routine changes - memoized dependencies
-  useEffect(() => {
+  // Reset form when routine changes
+  useState(() => {
     setWorkout({
       routine_id: routineId,
       date: format(new Date(), 'yyyy-MM-dd'),
@@ -67,13 +60,12 @@ export const WorkoutTrackingForm = ({
         completed: false
       }))
     });
-  }, [routineId, exercises]);
+  });
   
-  // Memoize the validation function
+  // Form validation
   const validateForm = useCallback(() => {
     if (!workout.user_id) {
       // This is just for form validation, so we can use a temporary ID
-      // The actual user_id will be set by the trackWorkout function
       const tempUserId = 'temp-user-id';
       
       const validationError = validateWorkoutSession({
@@ -113,38 +105,21 @@ export const WorkoutTrackingForm = ({
     return true;
   }, [workout]);
   
-  // Memoize the addExercise function
-  const addExercise = useCallback(() => {
-    if (!newExercise.name) {
-      setErrors({
-        ...errors,
-        newExercise: "El nombre del ejercicio es requerido"
-      });
-      return;
-    }
-    
+  // Add exercise handler
+  const addExercise = useCallback((newExercise: WorkoutExercise) => {
     setWorkout(prev => ({
       ...prev,
-      exercises: [...(prev.exercises || []), newExercise as WorkoutExercise]
+      exercises: [...(prev.exercises || []), newExercise]
     }));
-    
-    setNewExercise({
-      name: '',
-      sets: 3,
-      reps: '10',
-      completed: false
-    });
     
     setErrors({
       ...errors,
       exercises: undefined,
       newExercise: undefined
     });
-    
-    setAddExerciseOpen(false);
-  }, [newExercise, errors]);
+  }, [errors]);
   
-  // Memoize the removeExercise function
+  // Remove exercise handler
   const removeExercise = useCallback((index: number) => {
     setWorkout(prev => ({
       ...prev,
@@ -152,7 +127,7 @@ export const WorkoutTrackingForm = ({
     }));
   }, []);
   
-  // Memoize the toggleExerciseCompletion function
+  // Toggle exercise completion handler
   const toggleExerciseCompletion = useCallback((index: number) => {
     setWorkout(prev => ({
       ...prev,
@@ -162,7 +137,7 @@ export const WorkoutTrackingForm = ({
     }));
   }, []);
   
-  // Memoize the form submission handler
+  // Form submission handler
   const handleSubmit = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -218,52 +193,6 @@ export const WorkoutTrackingForm = ({
     }
   }, [workout, validateForm, trackWorkout, routineId, exercises, onComplete]);
 
-  // Memoize the entire exercise list for better performance
-  const exercisesList = useMemo(() => {
-    if (!workout.exercises || workout.exercises.length === 0) {
-      return (
-        <div className="text-center text-muted-foreground py-4 border rounded-md">
-          <p>No hay ejercicios añadidos aún</p>
-          {errors.exercises && (
-            <p className="text-sm text-destructive mt-2">{errors.exercises}</p>
-          )}
-        </div>
-      );
-    }
-    
-    return (
-      <div className="space-y-2 border rounded-md p-4">
-        {workout.exercises.map((exercise, index) => (
-          <div key={index} className="flex items-center justify-between py-2 border-b last:border-b-0">
-            <div className="flex items-center">
-              <input
-                type="checkbox"
-                checked={exercise.completed}
-                onChange={() => toggleExerciseCompletion(index)}
-                className="mr-2 h-4 w-4"
-                id={`exercise-${index}`}
-              />
-              <label 
-                htmlFor={`exercise-${index}`}
-                className={exercise.completed ? "line-through text-muted-foreground cursor-pointer" : "cursor-pointer"}
-              >
-                {exercise.name} - {exercise.sets} series × {exercise.reps}
-              </label>
-            </div>
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              onClick={() => removeExercise(index)}
-              type="button"
-            >
-              <Trash2 className="h-4 w-4 text-red-500" />
-            </Button>
-          </div>
-        ))}
-      </div>
-    );
-  }, [workout.exercises, errors.exercises, toggleExerciseCompletion, removeExercise]);
-  
   return (
     <Card className="w-full">
       <CardHeader>
@@ -335,70 +264,18 @@ export const WorkoutTrackingForm = ({
           <div className="space-y-2">
             <div className="flex justify-between items-center">
               <Label>Ejercicios</Label>
-              <Dialog open={addExerciseOpen} onOpenChange={setAddExerciseOpen}>
-                <DialogTrigger asChild>
-                  <Button variant="ghost" size="sm">
-                    <PlusCircle className="mr-2 h-4 w-4" />
-                    Añadir Ejercicio
-                  </Button>
-                </DialogTrigger>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>Añadir Nuevo Ejercicio</DialogTitle>
-                  </DialogHeader>
-                  <div className="space-y-4 py-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="exercise-name">Nombre del Ejercicio</Label>
-                      <Input
-                        id="exercise-name"
-                        value={newExercise.name}
-                        onChange={e => {
-                          setNewExercise({ ...newExercise, name: e.target.value });
-                          if (errors.newExercise) {
-                            const { newExercise, ...rest } = errors;
-                            setErrors(rest);
-                          }
-                        }}
-                        placeholder="ej. Flexiones"
-                        className={errors.newExercise ? "border-destructive" : ""}
-                      />
-                      {errors.newExercise && (
-                        <p className="text-sm text-destructive">{errors.newExercise}</p>
-                      )}
-                    </div>
-                    
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="exercise-sets">Series</Label>
-                        <Input
-                          id="exercise-sets"
-                          type="number"
-                          min={1}
-                          value={newExercise.sets}
-                          onChange={e => setNewExercise({ ...newExercise, sets: parseInt(e.target.value) || 1 })}
-                        />
-                      </div>
-                      
-                      <div className="space-y-2">
-                        <Label htmlFor="exercise-reps">Repeticiones</Label>
-                        <Input
-                          id="exercise-reps"
-                          value={newExercise.reps}
-                          onChange={e => setNewExercise({ ...newExercise, reps: e.target.value })}
-                          placeholder="ej. 10 o 30 sec"
-                        />
-                      </div>
-                    </div>
-                    
-                    <Button type="button" onClick={addExercise} className="w-full">
-                      Añadir Ejercicio
-                    </Button>
-                  </div>
-                </DialogContent>
-              </Dialog>
+              <AddExerciseDialog 
+                onAddExercise={addExercise}
+                error={errors.newExercise}
+              />
             </div>
             
-            {exercisesList}
+            <ExerciseList 
+              exercises={workout.exercises || []}
+              onToggleCompletion={toggleExerciseCompletion}
+              onRemove={removeExercise}
+              error={errors.exercises}
+            />
           </div>
           
           <div className="space-y-2">

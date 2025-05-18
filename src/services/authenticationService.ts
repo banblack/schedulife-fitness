@@ -1,154 +1,247 @@
-
+import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
-import { clearDemoUser } from '@/services/authService';
-import { transferDemoDataToAccount } from '@/services/workoutTracking';
-import { ToastOptions } from '@/hooks/use-toast';
+import { isDemoUser, getDemoUser, createDemoUser, clearDemoUser } from './authService';
 
-export interface AuthResult {
-  error: any;
-  success?: boolean;
-}
+// Use custom toast import without the ToastOptions that's causing the error
+import { toast } from '@/hooks/use-toast';
 
 export const signUp = async (
   email: string, 
   password: string, 
   name: string, 
   isAdmin: boolean = false,
-  toast: (props: ToastOptions) => void
-): Promise<AuthResult> => {
+  toastFunction?: any
+) => {
   try {
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
         data: {
-          full_name: name,
-        },
-      },
-    });
-
-    if (error) {
-      throw error;
-    }
-
-    if (data.user) {
-      // Create a profile in users table
-      await supabase.from('users').upsert({
-        id: data.user.id,
-        email,
-        full_name: name,
-        is_admin: isAdmin,
-        created_at: new Date().toISOString(),
-      });
-
-      // Transfer demo data if we're converting from demo to real user
-      const hasDemoData = localStorage.getItem('demo_workout_sessions') !== null;
-      
-      if (hasDemoData) {
-        await transferDemoDataToAccount(data.user.id);
+          name,
+          is_admin: isAdmin
+        }
       }
-
+    });
+    
+    if (error) {
+      if (toastFunction) {
+        toastFunction({
+          title: "Error de registro",
+          description: error.message,
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Error de registro",
+          description: error.message,
+          variant: "destructive",
+        });
+      }
+      return { error };
+    }
+    
+    // Success
+    if (toastFunction) {
+      toastFunction({
+        title: "Registro exitoso",
+        description: "Se ha enviado un correo de confirmación a tu dirección de email",
+      });
+    } else {
       toast({
-        title: "Cuenta creada",
-        description: isAdmin 
-          ? "Cuenta de administrador creada. Por favor inicia sesión." 
-          : "Por favor revisa tu correo para verificar tu cuenta",
+        title: "Registro exitoso",
+        description: "Se ha enviado un correo de confirmación a tu dirección de email",
       });
     }
-
-    return { error: null, success: true };
-  } catch (error) {
-    toast({
-      title: "Error al crear la cuenta",
-      description: error.message,
-      variant: "destructive",
-    });
+    
+    return { error: null };
+  } catch (error: any) {
+    console.error("Sign up error:", error);
+    if (toastFunction) {
+      toastFunction({
+        title: "Error inesperado",
+        description: "No se pudo completar el registro. Inténtalo más tarde.",
+        variant: "destructive",
+      });
+    } else {
+      toast({
+        title: "Error inesperado",
+        description: "No se pudo completar el registro. Inténtalo más tarde.",
+        variant: "destructive",
+      });
+    }
     return { error };
   }
 };
 
 export const signIn = async (
   email: string, 
-  password: string,
-  isDemo: boolean,
-  toast: (props: ToastOptions) => void
-): Promise<AuthResult> => {
+  password: string, 
+  isDemo: boolean = false,
+  toastFunction?: any
+) => {
   try {
-    // If there's a demo user, clear it before signing in with real credentials
+    // If demo is active, just return existing demo user or create new one
     if (isDemo) {
-      clearDemoUser();
+      const demoUser = getDemoUser() || createDemoUser();
+      
+      if (toastFunction) {
+        toastFunction({
+          title: "Modo demostración activo",
+          description: "Has iniciado sesión en modo demo",
+        });
+      } else {
+        toast({
+          title: "Modo demostración activo",
+          description: "Has iniciado sesión en modo demo",
+        });
+      }
+      
+      return { error: null };
     }
     
+    // Otherwise proceed with normal authentication
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
-      password,
+      password
     });
-
+    
     if (error) {
-      throw error;
+      if (toastFunction) {
+        toastFunction({
+          title: "Error de inicio de sesión",
+          description: error.message,
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Error de inicio de sesión",
+          description: error.message,
+          variant: "destructive",
+        });
+      }
+      return { error };
     }
-
-    toast({
-      title: "¡Bienvenido!",
-      description: "Has iniciado sesión correctamente",
-    });
-
-    return { error: null, success: true };
-  } catch (error) {
-    toast({
-      title: "Error al iniciar sesión",
-      description: error.message,
-      variant: "destructive",
-    });
+    
+    // Success
+    if (toastFunction) {
+      toastFunction({
+        title: "Inicio de sesión exitoso",
+        description: "Has iniciado sesión correctamente",
+      });
+    } else {
+      toast({
+        title: "Inicio de sesión exitoso",
+        description: "Has iniciado sesión correctamente",
+      });
+    }
+    
+    return { error: null };
+  } catch (error: any) {
+    console.error("Sign in error:", error);
+    if (toastFunction) {
+      toastFunction({
+        title: "Error inesperado",
+        description: "No se pudo iniciar sesión. Inténtalo más tarde.",
+        variant: "destructive",
+      });
+    } else {
+      toast({
+        title: "Error inesperado",
+        description: "No se pudo iniciar sesión. Inténtalo más tarde.",
+        variant: "destructive",
+      });
+    }
     return { error };
   }
 };
 
 export const signOut = async (
-  isDemo: boolean,
-  toast: (props: ToastOptions) => void
-): Promise<void> => {
+  isDemo: boolean = false,
+  toastFunction?: any
+) => {
   try {
-    // Handle demo user logout
+    // If demo is active, just clear the demo user
     if (isDemo) {
       clearDemoUser();
-      toast({
-        title: "Sesión cerrada",
-        description: "Has salido del modo demostración",
-      });
+      
+      if (toastFunction) {
+        toastFunction({
+          title: "Sesión finalizada",
+          description: "Has cerrado sesión del modo demo",
+        });
+      } else {
+        toast({
+          title: "Sesión finalizada",
+          description: "Has cerrado sesión del modo demo",
+        });
+      }
+      
       return;
     }
     
-    // Handle real Supabase auth logout
-    await supabase.auth.signOut();
-    toast({
-      title: "Sesión cerrada",
-      description: "Has cerrado sesión correctamente",
-    });
-  } catch (error) {
-    toast({
-      title: "Error al cerrar sesión",
-      description: error.message,
-      variant: "destructive",
-    });
+    // Otherwise proceed with normal sign out
+    const { error } = await supabase.auth.signOut();
+    
+    if (error) {
+      if (toastFunction) {
+        toastFunction({
+          title: "Error al cerrar sesión",
+          description: error.message,
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Error al cerrar sesión",
+          description: error.message,
+          variant: "destructive",
+        });
+      }
+      return;
+    }
+    
+    // Success
+    if (toastFunction) {
+      toastFunction({
+        title: "Sesión finalizada",
+        description: "Has cerrado sesión correctamente",
+      });
+    } else {
+      toast({
+        title: "Sesión finalizada",
+        description: "Has cerrado sesión correctamente",
+      });
+    }
+  } catch (error: any) {
+    console.error("Sign out error:", error);
+    if (toastFunction) {
+      toastFunction({
+        title: "Error inesperado",
+        description: "No se pudo cerrar sesión. Inténtalo más tarde.",
+        variant: "destructive",
+      });
+    } else {
+      toast({
+        title: "Error inesperado",
+        description: "No se pudo cerrar sesión. Inténtalo más tarde.",
+        variant: "destructive",
+      });
+    }
   }
 };
 
-export const refreshSession = async (isDemo: boolean): Promise<{ session: any; user: any }> => {
-  // Handle demo user case
+export const refreshSession = async (isDemo: boolean = false): Promise<{ session: Session | null; user: User | null }> => {
   if (isDemo) {
-    const demoUser = require('@/services/authService').getDemoUser();
-    return { session: null, user: demoUser };
-  }
-
-  // Handle real Supabase auth
-  const { data, error } = await supabase.auth.refreshSession();
-  if (error) {
-    console.error('Error refreshing session:', error);
+    const demoUser = getDemoUser();
+    
+    return {
+      session: null,
+      user: demoUser
+    };
   }
   
-  return {
-    session: data.session,
-    user: data.session?.user ?? null
-  };
+  const { data } = await supabase.auth.refreshSession();
+  const { session, user } = data;
+  
+  return { session, user };
 };
