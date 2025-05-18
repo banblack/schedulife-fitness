@@ -4,6 +4,7 @@ import { supabase } from '@/lib/supabase';
 import { User, Session } from '@supabase/supabase-js';
 import { useToast } from '@/components/ui/use-toast';
 import { isDemoUser, getDemoUser, clearDemoUser } from '@/services/authService';
+import { transferDemoDataToAccount } from '@/services/workoutTracking';
 
 type AuthContextType = {
   user: User | null;
@@ -14,6 +15,7 @@ type AuthContextType = {
   loading: boolean;
   refreshSession: () => Promise<void>;
   isDemo: boolean;
+  transferDemoData: () => Promise<boolean>;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -44,6 +46,35 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setSession(data.session);
       setUser(data.session?.user ?? null);
     }
+  };
+
+  // Function to transfer demo data to a real account
+  const transferDemoData = async () => {
+    if (!user) {
+      toast({
+        title: "Error",
+        description: "No hay usuario autenticado para transferir los datos",
+        variant: "destructive",
+      });
+      return false;
+    }
+
+    const success = await transferDemoDataToAccount(user.id);
+    
+    if (success) {
+      toast({
+        title: "Datos transferidos",
+        description: "Tus entrenamientos de prueba han sido guardados en tu cuenta",
+      });
+    } else {
+      toast({
+        title: "Error",
+        description: "No se pudieron transferir los datos de prueba",
+        variant: "destructive",
+      });
+    }
+    
+    return success;
   };
 
   useEffect(() => {
@@ -108,18 +139,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           created_at: new Date().toISOString(),
         });
 
+        // Transfer demo data if we're converting from demo to real user
+        const hasDemoData = localStorage.getItem('demo_workout_sessions') !== null;
+        
+        if (hasDemoData) {
+          await transferDemoDataToAccount(data.user.id);
+        }
+
         toast({
-          title: "Account created",
+          title: "Cuenta creada",
           description: isAdmin 
-            ? "Admin account created. Please sign in." 
-            : "Please check your email to verify your account",
+            ? "Cuenta de administrador creada. Por favor inicia sesión." 
+            : "Por favor revisa tu correo para verificar tu cuenta",
         });
       }
 
       return { error: null };
     } catch (error) {
       toast({
-        title: "Error creating account",
+        title: "Error al crear la cuenta",
         description: error.message,
         variant: "destructive",
       });
@@ -129,6 +167,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signIn = async (email: string, password: string) => {
     try {
+      // If there's a demo user, clear it before signing in with real credentials
+      if (isDemo) {
+        clearDemoUser();
+      }
+      
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
@@ -139,14 +182,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
 
       toast({
-        title: "Welcome back!",
-        description: "You've successfully signed in",
+        title: "¡Bienvenido!",
+        description: "Has iniciado sesión correctamente",
       });
 
       return { error: null };
     } catch (error) {
       toast({
-        title: "Error signing in",
+        title: "Error al iniciar sesión",
         description: error.message,
         variant: "destructive",
       });
@@ -162,8 +205,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setUser(null);
         setIsDemo(false);
         toast({
-          title: "Signed out",
-          description: "Demo user has been signed out",
+          title: "Sesión cerrada",
+          description: "Has salido del modo demostración",
         });
         return;
       }
@@ -171,12 +214,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // Handle real Supabase auth logout
       await supabase.auth.signOut();
       toast({
-        title: "Signed out",
-        description: "You've been successfully signed out",
+        title: "Sesión cerrada",
+        description: "Has cerrado sesión correctamente",
       });
     } catch (error) {
       toast({
-        title: "Error signing out",
+        title: "Error al cerrar sesión",
         description: error.message,
         variant: "destructive",
       });
@@ -194,6 +237,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         loading,
         refreshSession,
         isDemo,
+        transferDemoData,
       }}
     >
       {children}

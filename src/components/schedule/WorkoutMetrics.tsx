@@ -3,18 +3,23 @@ import { useEffect, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { getUserWorkoutSessions } from '@/services/workoutTracking';
 import { useAuth } from '@/contexts/AuthContext';
-import { format, parseISO, subDays } from 'date-fns';
+import { format, parseISO, subDays, isAfter } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { CalendarDays, Timer, Dumbbell, ArrowUp } from 'lucide-react';
+import { CalendarDays, Timer, Dumbbell, ArrowUp, Award, TrendingUp, Flame } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { Skeleton } from '@/components/ui/skeleton';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 export const WorkoutMetrics = () => {
-  const { user } = useAuth();
+  const { user, isDemo } = useAuth();
+  const isMobile = useIsMobile();
   const [metrics, setMetrics] = useState({
     totalWorkouts: 0,
     totalMinutes: 0,
     totalExercises: 0,
     streak: 0,
     lastWorkout: null as string | null,
+    thisWeekWorkouts: 0,
   });
   const [isLoading, setIsLoading] = useState(true);
 
@@ -45,12 +50,20 @@ export const WorkoutMetrics = () => {
           // Calculate streak
           const streak = calculateStreak(sessions);
           
+          // This week workouts
+          const today = new Date();
+          const oneWeekAgo = subDays(today, 7);
+          const thisWeekWorkouts = sessions.filter(session => 
+            isAfter(new Date(session.date), oneWeekAgo)
+          ).length;
+          
           setMetrics({
             totalWorkouts,
             totalMinutes,
             totalExercises,
             streak,
             lastWorkout,
+            thisWeekWorkouts,
           });
         }
       } catch (error) {
@@ -94,67 +107,121 @@ export const WorkoutMetrics = () => {
     return streak;
   };
 
-  if (isLoading) {
-    return (
-      <Card className="w-full">
-        <CardHeader className="pb-2">
-          <CardTitle>Estadísticas de Entrenamiento</CardTitle>
-        </CardHeader>
-        <CardContent className="grid grid-cols-2 gap-4">
-          {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="flex flex-col space-y-1.5 p-4 rounded-lg animate-pulse bg-muted">
-              <div className="h-5 w-5 rounded-full bg-muted-foreground/30"></div>
-              <div className="h-6 w-24 rounded bg-muted-foreground/30"></div>
-              <div className="h-4 w-16 rounded bg-muted-foreground/30"></div>
-            </div>
-          ))}
-        </CardContent>
-      </Card>
-    );
-  }
+  // Card variants for animation
+  const container = {
+    hidden: { opacity: 0 },
+    show: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1
+      }
+    }
+  };
   
-  return (
+  const item = {
+    hidden: { y: 20, opacity: 0 },
+    show: { y: 0, opacity: 1 }
+  };
+
+  const renderSkeleton = () => (
     <Card className="w-full">
       <CardHeader className="pb-2">
         <CardTitle>Estadísticas de Entrenamiento</CardTitle>
         <CardDescription>
-          Resumen de tu actividad física
+          {isDemo ? "Datos de la versión de prueba" : "Resumen de tu actividad física"}
         </CardDescription>
       </CardHeader>
-      <CardContent className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        <div className="flex flex-col space-y-1.5 p-4 rounded-lg bg-muted/50">
-          <div className="flex items-center text-primary justify-between">
-            <Dumbbell className="h-5 w-5" />
+      <CardContent className={`grid grid-cols-2 ${!isMobile ? 'sm:grid-cols-4' : ''} gap-4`}>
+        {Array(isMobile ? 4 : 6).fill(0).map((_, i) => (
+          <div key={i} className="flex flex-col space-y-2 p-4 rounded-lg bg-muted/50">
+            <Skeleton className="h-5 w-5 rounded-full" />
+            <Skeleton className="h-7 w-16" />
+            <Skeleton className="h-4 w-24" />
           </div>
-          <h3 className="text-2xl font-bold">{metrics.totalWorkouts}</h3>
-          <p className="text-xs text-muted-foreground">Entrenamientos</p>
-        </div>
-        
-        <div className="flex flex-col space-y-1.5 p-4 rounded-lg bg-muted/50">
-          <div className="flex items-center text-primary justify-between">
-            <Timer className="h-5 w-5" />
-          </div>
-          <h3 className="text-2xl font-bold">{metrics.totalMinutes}</h3>
-          <p className="text-xs text-muted-foreground">Minutos totales</p>
-        </div>
-        
-        <div className="flex flex-col space-y-1.5 p-4 rounded-lg bg-muted/50">
-          <div className="flex items-center text-primary justify-between">
-            <ArrowUp className="h-5 w-5" />
-          </div>
-          <h3 className="text-2xl font-bold">{metrics.streak}</h3>
-          <p className="text-xs text-muted-foreground">Racha actual</p>
-        </div>
-        
-        <div className="flex flex-col space-y-1.5 p-4 rounded-lg bg-muted/50">
-          <div className="flex items-center text-primary justify-between">
-            <CalendarDays className="h-5 w-5" />
-          </div>
-          <h3 className="text-2xl font-bold">{metrics.lastWorkout ? 
-            format(parseISO(metrics.lastWorkout), "d MMM", {locale: es}) : "N/A"}
-          </h3>
-          <p className="text-xs text-muted-foreground">Último entrenamiento</p>
-        </div>
+        ))}
+      </CardContent>
+    </Card>
+  );
+  
+  if (isLoading) {
+    return renderSkeleton();
+  }
+  
+  // Determine the number of metrics to display based on screen size
+  const metrics_to_display = [
+    { 
+      icon: <Dumbbell className="h-5 w-5" />,
+      value: metrics.totalWorkouts,
+      label: "Entrenamientos"
+    },
+    { 
+      icon: <Timer className="h-5 w-5" />,
+      value: metrics.totalMinutes,
+      label: "Minutos totales"
+    },
+    { 
+      icon: <Flame className="h-5 w-5" />,
+      value: metrics.streak,
+      label: "Racha actual"
+    },
+    { 
+      icon: <CalendarDays className="h-5 w-5" />,
+      value: metrics.lastWorkout ? format(parseISO(metrics.lastWorkout), "d MMM", {locale: es}) : "N/A",
+      label: "Último entrenamiento"
+    },
+    // Additional metrics for larger screens
+    { 
+      icon: <Award className="h-5 w-5" />,
+      value: metrics.totalExercises,
+      label: "Ejercicios totales"
+    },
+    { 
+      icon: <TrendingUp className="h-5 w-5" />,
+      value: metrics.thisWeekWorkouts,
+      label: "Esta semana"
+    }
+  ];
+  
+  // For mobile, only show 4 metrics
+  const displayMetrics = isMobile ? metrics_to_display.slice(0, 4) : metrics_to_display;
+
+  return (
+    <Card className="w-full">
+      <CardHeader className="pb-2">
+        <CardTitle className="flex items-center">
+          Estadísticas de Entrenamiento
+          {isDemo && (
+            <span className="ml-2 text-xs font-normal bg-accent/20 text-accent px-2 py-1 rounded-full">
+              Demo
+            </span>
+          )}
+        </CardTitle>
+        <CardDescription>
+          {isDemo ? "Datos guardados localmente en este dispositivo" : "Resumen de tu actividad física"}
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <motion.div 
+          className={`grid grid-cols-2 ${!isMobile ? 'sm:grid-cols-3 lg:grid-cols-6' : ''} gap-3`}
+          variants={container}
+          initial="hidden"
+          animate="show"
+        >
+          {displayMetrics.map((metric, idx) => (
+            <motion.div 
+              key={idx} 
+              className="flex flex-col space-y-1.5 p-4 rounded-lg bg-muted/50 hover:bg-muted/80 transition-colors"
+              variants={item}
+              whileHover={{ scale: 1.02 }}
+            >
+              <div className="flex items-center text-primary justify-between">
+                {metric.icon}
+              </div>
+              <h3 className="text-2xl font-bold">{metric.value}</h3>
+              <p className="text-xs text-muted-foreground">{metric.label}</p>
+            </motion.div>
+          ))}
+        </motion.div>
       </CardContent>
     </Card>
   );

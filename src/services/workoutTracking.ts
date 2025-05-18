@@ -56,6 +56,40 @@ export const getDemoWorkoutSessions = (): WorkoutSession[] => {
   }
 };
 
+// Clear demo data (used after transferring to a real account)
+export const clearDemoWorkoutSessions = (): void => {
+  localStorage.removeItem(DEMO_WORKOUT_SESSIONS);
+};
+
+// Transfer demo data to a real account
+export const transferDemoDataToAccount = async (userId: string): Promise<boolean> => {
+  try {
+    const demoSessions = getDemoWorkoutSessions();
+    if (!demoSessions.length) return true; // No data to transfer
+    
+    // Update user_id in all demo sessions
+    const sessionsToTransfer = demoSessions.map(session => ({
+      ...session,
+      id: undefined, // Remove demo ID to let Supabase generate a new one
+      user_id: userId,
+    }));
+    
+    // Insert all sessions at once
+    const { error } = await supabase
+      .from('workout_sessions')
+      .insert(sessionsToTransfer);
+    
+    if (error) throw error;
+    
+    // Clear demo data after successful transfer
+    clearDemoWorkoutSessions();
+    return true;
+  } catch (error) {
+    console.error('Error transferring demo data:', error);
+    return false;
+  }
+};
+
 // Real Supabase workout tracking functions
 export const saveWorkoutSession = async (
   session: WorkoutSession, 
