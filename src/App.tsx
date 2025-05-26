@@ -22,6 +22,7 @@ import Admin from "./pages/Admin";
 import Auth from "./pages/Auth";
 import PasswordReset from "./pages/PasswordReset";
 import NotFound from "./pages/NotFound";
+import Analytics from "./pages/Analytics";
 import { WorkoutProvider } from "./contexts/WorkoutContext";
 import WorkoutTracking from "./pages/WorkoutTracking";
 

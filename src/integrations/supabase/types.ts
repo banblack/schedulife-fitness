@@ -9,6 +9,36 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      app_usage_metrics: {
+        Row: {
+          created_at: string
+          event_data: Json | null
+          event_type: string
+          id: string
+          page_path: string | null
+          session_id: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          event_data?: Json | null
+          event_type: string
+          id?: string
+          page_path?: string | null
+          session_id?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          event_data?: Json | null
+          event_type?: string
+          id?: string
+          page_path?: string | null
+          session_id?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       dynamic_achievements: {
         Row: {
           badge_data: Json
@@ -407,6 +437,72 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      user_progress_metrics: {
+        Row: {
+          created_at: string
+          date: string
+          id: string
+          metric_name: string
+          metric_unit: string | null
+          metric_value: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          date?: string
+          id?: string
+          metric_name: string
+          metric_unit?: string | null
+          metric_value: number
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          date?: string
+          id?: string
+          metric_name?: string
+          metric_unit?: string | null
+          metric_value?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_recommendations: {
+        Row: {
+          created_at: string
+          description: string | null
+          expires_at: string | null
+          id: string
+          is_active: boolean | null
+          priority: number | null
+          recommendation_type: string
+          title: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          priority?: number | null
+          recommendation_type: string
+          title: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          priority?: number | null
+          recommendation_type?: string
+          title?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       user_workout_stats: {
         Row: {
