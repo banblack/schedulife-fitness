@@ -4,20 +4,6 @@
  * 
  * Displays a condensed view of key analytics metrics that can be
  * embedded in other pages like the main dashboard.
- * 
- * @example
- * ```tsx
- * import { QuickMetrics } from '@/components/analytics/QuickMetrics';
- * 
- * function Dashboard() {
- *   return (
- *     <div>
- *       <QuickMetrics />
- *       {/* Other dashboard content */}
- *     </div>
- *   );
- * }
- * ```
  */
 
 import React from 'react';
