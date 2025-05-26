@@ -1,6 +1,8 @@
 
-import { render, screen, fireEvent } from '@testing-library/react';
-import { describe, it, expect, vi } from 'vitest';
+import { render } from '@testing-library/react';
+import { screen } from '@testing-library/dom';
+import userEvent from '@testing-library/user-event';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { ExerciseItem } from '../schedule/workout-tracking/ExerciseItem';
 import { WorkoutExercise } from '@/hooks/useWorkoutTracking';
 
@@ -49,7 +51,8 @@ describe('ExerciseItem', () => {
     expect(screen.getByText('Push-ups - 3 series × 10')).toHaveClass('line-through');
   });
 
-  it('calls onToggleCompletion when checkbox is clicked', () => {
+  it('calls onToggleCompletion when checkbox is clicked', async () => {
+    const user = userEvent.setup();
     render(
       <ExerciseItem
         exercise={mockExercise}
@@ -59,11 +62,12 @@ describe('ExerciseItem', () => {
       />
     );
 
-    fireEvent.click(screen.getByRole('checkbox'));
+    await user.click(screen.getByRole('checkbox'));
     expect(mockOnToggleCompletion).toHaveBeenCalledWith(0);
   });
 
-  it('calls onRemove when delete button is clicked', () => {
+  it('calls onRemove when delete button is clicked', async () => {
+    const user = userEvent.setup();
     render(
       <ExerciseItem
         exercise={mockExercise}
@@ -73,7 +77,7 @@ describe('ExerciseItem', () => {
       />
     );
 
-    fireEvent.click(screen.getByRole('button'));
+    await user.click(screen.getByRole('button'));
     expect(mockOnRemove).toHaveBeenCalledWith(0);
   });
 

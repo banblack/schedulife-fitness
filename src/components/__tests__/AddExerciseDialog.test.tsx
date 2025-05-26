@@ -1,6 +1,8 @@
 
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { describe, it, expect, vi } from 'vitest';
+import { render, waitFor } from '@testing-library/react';
+import { screen } from '@testing-library/dom';
+import userEvent from '@testing-library/user-event';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { AddExerciseDialog } from '../schedule/workout-tracking/AddExerciseDialog';
 
 describe('AddExerciseDialog', () => {
@@ -10,32 +12,30 @@ describe('AddExerciseDialog', () => {
     vi.clearAllMocks();
   });
 
-  it('opens dialog when trigger button is clicked', () => {
+  it('opens dialog when trigger button is clicked', async () => {
+    const user = userEvent.setup();
     render(<AddExerciseDialog onAddExercise={mockOnAddExercise} />);
     
-    fireEvent.click(screen.getByText('Añadir Ejercicio'));
+    await user.click(screen.getByText('Añadir Ejercicio'));
     expect(screen.getByText('Añadir Nuevo Ejercicio')).toBeInTheDocument();
   });
 
   it('adds exercise with correct data', async () => {
+    const user = userEvent.setup();
     render(<AddExerciseDialog onAddExercise={mockOnAddExercise} />);
     
     // Open dialog
-    fireEvent.click(screen.getByText('Añadir Ejercicio'));
+    await user.click(screen.getByText('Añadir Ejercicio'));
     
     // Fill form
-    fireEvent.change(screen.getByLabelText('Nombre del Ejercicio'), {
-      target: { value: 'Squats' }
-    });
-    fireEvent.change(screen.getByLabelText('Series'), {
-      target: { value: '4' }
-    });
-    fireEvent.change(screen.getByLabelText('Repeticiones'), {
-      target: { value: '12' }
-    });
+    await user.type(screen.getByLabelText('Nombre del Ejercicio'), 'Squats');
+    await user.clear(screen.getByLabelText('Series'));
+    await user.type(screen.getByLabelText('Series'), '4');
+    await user.clear(screen.getByLabelText('Repeticiones'));
+    await user.type(screen.getByLabelText('Repeticiones'), '12');
     
     // Submit
-    fireEvent.click(screen.getByRole('button', { name: 'Añadir Ejercicio' }));
+    await user.click(screen.getByRole('button', { name: 'Añadir Ejercicio' }));
     
     await waitFor(() => {
       expect(mockOnAddExercise).toHaveBeenCalledWith({
@@ -47,22 +47,24 @@ describe('AddExerciseDialog', () => {
     });
   });
 
-  it('displays error message when provided', () => {
+  it('displays error message when provided', async () => {
+    const user = userEvent.setup();
     render(<AddExerciseDialog onAddExercise={mockOnAddExercise} error="Test error" />);
     
-    fireEvent.click(screen.getByText('Añadir Ejercicio'));
+    await user.click(screen.getByText('Añadir Ejercicio'));
     expect(screen.getByText('Test error')).toBeInTheDocument();
   });
 
   it('resets form after adding exercise', async () => {
+    const user = userEvent.setup();
     render(<AddExerciseDialog onAddExercise={mockOnAddExercise} />);
     
-    fireEvent.click(screen.getByText('Añadir Ejercicio'));
+    await user.click(screen.getByText('Añadir Ejercicio'));
     
     const nameInput = screen.getByLabelText('Nombre del Ejercicio') as HTMLInputElement;
-    fireEvent.change(nameInput, { target: { value: 'Test Exercise' } });
+    await user.type(nameInput, 'Test Exercise');
     
-    fireEvent.click(screen.getByRole('button', { name: 'Añadir Ejercicio' }));
+    await user.click(screen.getByRole('button', { name: 'Añadir Ejercicio' }));
     
     await waitFor(() => {
       expect(nameInput.value).toBe('');
