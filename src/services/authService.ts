@@ -137,6 +137,28 @@ export const getDemoUser = (): User | null => {
   }
 };
 
+export const createDemoUser = (): User => {
+  const demoUser: User = {
+    id: DEMO_USER_ID,
+    email: DEMO_USER_EMAIL,
+    aud: 'authenticated',
+    role: 'authenticated',
+    user_metadata: {
+      full_name: 'Demo User'
+    },
+    app_metadata: {},
+    created_at: new Date().toISOString(),
+    email_confirmed_at: new Date().toISOString(),
+    phone_confirmed_at: null,
+    confirmed_at: new Date().toISOString(),
+    last_sign_in_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
+  };
+
+  localStorage.setItem('demo_user', JSON.stringify(demoUser));
+  return demoUser;
+};
+
 export const clearDemoUser = (): void => {
   localStorage.removeItem('demo_user');
 };
