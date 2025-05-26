@@ -79,6 +79,14 @@ class AnalyticsService {
   }
 
   /**
+   * Gets the current user ID from Supabase auth
+   */
+  private async getCurrentUserId(): Promise<string | null> {
+    const { data: { user } } = await supabase.auth.getUser();
+    return user?.id || null;
+  }
+
+  /**
    * Tracks a user event for analytics purposes
    * 
    * @param eventType - Type of event (e.g., 'workout_completed', 'page_view')
@@ -91,9 +99,16 @@ class AnalyticsService {
     pagePath?: string
   ): Promise<void> {
     try {
+      const userId = await this.getCurrentUserId();
+      if (!userId) {
+        console.warn('Cannot track event: user not authenticated');
+        return;
+      }
+
       const { error } = await supabase
         .from('app_usage_metrics')
         .insert({
+          user_id: userId,
           event_type: eventType,
           event_data: eventData,
           session_id: this.sessionId,
@@ -123,9 +138,16 @@ class AnalyticsService {
     date?: Date
   ): Promise<void> {
     try {
+      const userId = await this.getCurrentUserId();
+      if (!userId) {
+        console.warn('Cannot record progress metric: user not authenticated');
+        return;
+      }
+
       const { error } = await supabase
         .from('user_progress_metrics')
         .upsert({
+          user_id: userId,
           metric_name: metricName,
           metric_value: value,
           metric_unit: unit,
@@ -151,6 +173,12 @@ class AnalyticsService {
     metricName?: string
   ): Promise<ProgressMetric[]> {
     try {
+      const userId = await this.getCurrentUserId();
+      if (!userId) {
+        console.warn('Cannot get progress metrics: user not authenticated');
+        return [];
+      }
+
       const days = period === 'last_7_days' ? 7 : period === 'last_30_days' ? 30 : 90;
       const startDate = new Date();
       startDate.setDate(startDate.getDate() - days);
@@ -158,6 +186,7 @@ class AnalyticsService {
       let query = supabase
         .from('user_progress_metrics')
         .select('*')
+        .eq('user_id', userId)
         .gte('date', startDate.toISOString().split('T')[0])
         .order('date', { ascending: false });
 
@@ -184,10 +213,17 @@ class AnalyticsService {
    */
   async getDashboardData(): Promise<AnalyticsDashboardData> {
     try {
+      const userId = await this.getCurrentUserId();
+      if (!userId) {
+        console.warn('Cannot get dashboard data: user not authenticated');
+        return this.getEmptyDashboardData();
+      }
+
       // Get workout sessions data
       const { data: workoutSessions, error: workoutError } = await supabase
         .from('workout_sessions')
         .select('*')
+        .eq('user_id', userId)
         .eq('completed', true)
         .gte('date', new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0])
         .order('date', { ascending: false });
@@ -230,16 +266,23 @@ class AnalyticsService {
       };
     } catch (error) {
       console.error('Failed to generate dashboard data:', error);
-      return {
-        totalWorkouts: 0,
-        avgWorkoutDuration: 0,
-        weeklyProgress: [],
-        monthlyTrends: [],
-        topExercises: [],
-        streakDays: 0,
-        improvementAreas: []
-      };
+      return this.getEmptyDashboardData();
     }
+  }
+
+  /**
+   * Returns empty dashboard data structure
+   */
+  private getEmptyDashboardData(): AnalyticsDashboardData {
+    return {
+      totalWorkouts: 0,
+      avgWorkoutDuration: 0,
+      weeklyProgress: [],
+      monthlyTrends: [],
+      topExercises: [],
+      streakDays: 0,
+      improvementAreas: []
+    };
   }
 
   /**
@@ -247,12 +290,27 @@ class AnalyticsService {
    */
   async generateRecommendations(): Promise<void> {
     try {
+      const userId = await this.getCurrentUserId();
+      if (!userId) {
+        console.warn('Cannot generate recommendations: user not authenticated');
+        return;
+      }
+
       const dashboardData = await this.getDashboardData();
-      const recommendations: Omit<UserRecommendation, 'id' | 'user_id' | 'created_at'>[] = [];
+      const recommendations: Array<{
+        user_id: string;
+        recommendation_type: string;
+        title: string;
+        description?: string;
+        priority: number;
+        is_active: boolean;
+        expires_at?: string;
+      }> = [];
 
       // Workout frequency recommendations
       if (dashboardData.totalWorkouts < 12) { // Less than 3 workouts per month average
         recommendations.push({
+          user_id: userId,
           recommendation_type: 'workout_frequency',
           title: 'Incrementa tu frecuencia de entrenamiento',
           description: 'Intenta entrenar al menos 3 veces por semana para mejores resultados',
@@ -265,6 +323,7 @@ class AnalyticsService {
       // Workout duration recommendations
       if (dashboardData.avgWorkoutDuration < 30) {
         recommendations.push({
+          user_id: userId,
           recommendation_type: 'workout_duration',
           title: 'Extiende tus sesiones de entrenamiento',
           description: 'Intenta entrenar por al menos 30-45 minutos para maximizar los beneficios',
@@ -277,6 +336,7 @@ class AnalyticsService {
       // Streak recommendations
       if (dashboardData.streakDays < 3) {
         recommendations.push({
+          user_id: userId,
           recommendation_type: 'consistency',
           title: 'Mejora tu consistencia',
           description: 'Trata de entrenar días consecutivos para construir un hábito sólido',
@@ -306,9 +366,16 @@ class AnalyticsService {
    */
   async getActiveRecommendations(): Promise<UserRecommendation[]> {
     try {
+      const userId = await this.getCurrentUserId();
+      if (!userId) {
+        console.warn('Cannot get recommendations: user not authenticated');
+        return [];
+      }
+
       const { data, error } = await supabase
         .from('user_recommendations')
         .select('*')
+        .eq('user_id', userId)
         .eq('is_active', true)
         .or(`expires_at.is.null,expires_at.gt.${new Date().toISOString()}`)
         .order('priority', { ascending: true })
